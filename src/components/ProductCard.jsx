@@ -20,9 +20,7 @@ export default function ProductCard({ product, onEdit, onDelete, index = 0 }) {
         {product.brand ? <p className="product-card__brand">{product.brand}</p> : null}
 
         <div className="product-card__tags">
-          <span className="status-pill" style={{ color, background: status?.tint }}>
-            {status?.label || 'לא ידוע'}
-          </span>
+          <span className="status-pill">{status?.label || 'לא ידוע'}</span>
           {product.isLocal ? (
             <span className="local-pill">
               <PhoneIcon size={13} />

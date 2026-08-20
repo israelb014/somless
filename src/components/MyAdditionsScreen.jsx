@@ -2,7 +2,8 @@
 // המאגר המרכזי מתעדכן דרך Claude Code — ראו את ההסבר בתחתית המסך.
 import { useState } from 'react'
 import ProductCard from './ProductCard.jsx'
-import { CheckIcon, CopyIcon, InboxIcon, ShareIcon } from './Icons.jsx'
+import { CheckIcon, CopyIcon, ShareIcon } from './Icons.jsx'
+import { EmptySeedArt } from './SeedArt.jsx'
 import { exportLocalProducts } from '../lib/products.js'
 
 export default function MyAdditionsScreen({ local, dbMeta, onEdit, onDelete }) {
@@ -45,9 +46,7 @@ export default function MyAdditionsScreen({ local, dbMeta, onEdit, onDelete }) {
 
       {items.length === 0 ? (
         <div className="empty-state fade-in">
-          <span className="empty-state__mark">
-            <InboxIcon size={30} />
-          </span>
+          <EmptySeedArt width={200} />
           <p className="empty-state__title">עדיין לא הוספתם כלום מהמכשיר הזה</p>
           <p className="empty-state__text">
             מוצר שתוסיפו יישמר כאן על הטלפון בלבד, ויופיע בתוצאות עם התג "מקומי".

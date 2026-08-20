@@ -1,10 +1,20 @@
 // מסך פתיחה ראשון — אישור הדיסקליימר נשמר על המכשיר (IndexedDB).
-import { useState } from 'react'
-import { InfoIcon, ShieldIcon } from './Icons.jsx'
+import { useEffect, useState } from 'react'
+import { InfoIcon } from './Icons.jsx'
+import SesameSeed from './SesameSeed.jsx'
+import { SeedDrift } from './SeedArt.jsx'
+import { useFx } from '../hooks/useFx.jsx'
 import { DISCLAIMER } from '../config.js'
 
 export default function DisclaimerScreen({ onAccept }) {
   const [busy, setBusy] = useState(false)
+  const { rain } = useFx()
+
+  // השומשומים נופלים פעם אחת בפתיחה ונערמים בתחתית המסך
+  useEffect(() => {
+    const t = setTimeout(() => rain(90), 150)
+    return () => clearTimeout(t)
+  }, [rain])
 
   async function accept() {
     setBusy(true)
@@ -19,7 +29,7 @@ export default function DisclaimerScreen({ onAccept }) {
     <div className="screen screen--center">
       <div className="gate fade-in">
         <div className="gate__mark">
-          <ShieldIcon size={40} />
+          <SesameSeed variant="toasted" size={40} rotate={-14} />
         </div>
         <h1 className="gate__title">לפני שמתחילים</h1>
         <p className="gate__disclaimer">{DISCLAIMER}</p>
@@ -41,6 +51,7 @@ export default function DisclaimerScreen({ onAccept }) {
           {busy ? 'רגע…' : 'הבנתי, בואו נתחיל'}
         </button>
       </div>
+      <SeedDrift />
     </div>
   )
 }

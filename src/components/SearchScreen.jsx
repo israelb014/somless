@@ -3,12 +3,26 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ProductCard from './ProductCard.jsx'
 import StatusRing from './StatusRing.jsx'
 import { CloseIcon, PlusIcon, SearchIcon } from './Icons.jsx'
+import { EmptySeedArt } from './SeedArt.jsx'
+import { useFx } from '../hooks/useFx.jsx'
 import { searchProducts } from '../lib/search.js'
 import { DISCLAIMER } from '../config.js'
 
 export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
   const [query, setQuery] = useState('')
   const inputRef = useRef(null)
+  const boxRef = useRef(null)
+  const { pop } = useFx()
+
+  // כל הקשה מקפיצה כמה זרעים מאזור שדה החיפוש.
+  // רץ אחרי עדכון ה-state — לא מעכב את החיפוש עצמו באף מילישנייה.
+  function handleChange(e) {
+    setQuery(e.target.value)
+    const box = boxRef.current
+    if (!box) return
+    const r = box.getBoundingClientRect()
+    pop(r.left + r.width * (0.2 + Math.random() * 0.6), r.top + r.height * 0.5)
+  }
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -25,13 +39,13 @@ export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
         <h1 className="search-hero__title">סומלס</h1>
         <p className="search-hero__subtitle">יש בזה שומשום?</p>
 
-        <div className="search-box">
+        <div className="search-box" ref={boxRef}>
           <SearchIcon size={22} className="search-box__icon" />
           <input
             ref={inputRef}
             className="search-box__input"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleChange}
             placeholder="שם מוצר…"
             type="search"
             autoComplete="off"
@@ -58,9 +72,12 @@ export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
 
       <div className="results">
         {!trimmed ? (
-          <p className="results__placeholder">
-            הקלידו שם מוצר כדי לבדוק אם הוא מכיל שומשום.
-          </p>
+          <div className="empty-state fade-in">
+            <EmptySeedArt width={210} />
+            <p className="empty-state__text">
+              הקלידו שם מוצר כדי לבדוק אם הוא מכיל שומשום.
+            </p>
+          </div>
         ) : null}
 
         {showEmpty ? (

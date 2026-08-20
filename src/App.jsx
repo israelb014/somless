@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useProducts } from './hooks/useProducts.js'
 import { useDisclaimer } from './hooks/useDisclaimer.js'
+import { useFx } from './hooks/useFx.jsx'
 
 import DisclaimerScreen from './components/DisclaimerScreen.jsx'
 import SearchScreen from './components/SearchScreen.jsx'
@@ -9,12 +10,15 @@ import MyAdditionsScreen from './components/MyAdditionsScreen.jsx'
 import ProductForm from './components/ProductForm.jsx'
 import ConfirmDialog from './components/ConfirmDialog.jsx'
 import BottomNav from './components/BottomNav.jsx'
+import SeedCanvas from './components/SeedCanvas.jsx'
+import SeedSpinner from './components/SeedSpinner.jsx'
+import FxToggle from './components/FxToggle.jsx'
 
 function Splash() {
   return (
     <div className="screen screen--center">
       <div className="splash">
-        <span className="spinner" aria-hidden="true" />
+        <SeedSpinner size={58} />
         <p>טוען…</p>
       </div>
     </div>
@@ -25,11 +29,53 @@ export default function App() {
   const { products, local, counts, loading, dbMeta, addLocal, updateLocal, deleteLocal } =
     useProducts()
   const { accepted, accept } = useDisclaimer()
+  const { rain } = useFx()
 
   const [view, setView] = useState('search') // search | list | mine
   const [editing, setEditing] = useState(null) // מוצר בעריכה / טיוטה חדשה
   const [pendingDelete, setPendingDelete] = useState(null)
 
+  // מטר שומשומים על כל מעבר מסך — מעל התוכן, לא חוסם אותו
+  const formOpen = Boolean(editing)
+  const firstRender = useRef(true)
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    rain()
+  }, [view, formOpen, rain])
+
+  return (
+    <>
+      <SeedCanvas />
+      <AppBody
+        loading={loading}
+        accepted={accepted}
+        accept={accept}
+        products={products}
+        local={local}
+        counts={counts}
+        dbMeta={dbMeta}
+        view={view}
+        setView={setView}
+        editing={editing}
+        setEditing={setEditing}
+        pendingDelete={pendingDelete}
+        setPendingDelete={setPendingDelete}
+        addLocal={addLocal}
+        updateLocal={updateLocal}
+        deleteLocal={deleteLocal}
+      />
+    </>
+  )
+}
+
+function AppBody({
+  loading, accepted, accept, products, local, counts, dbMeta,
+  view, setView, editing, setEditing, pendingDelete, setPendingDelete,
+  addLocal, updateLocal, deleteLocal,
+}) {
   if (accepted === null || loading) return <Splash />
   if (!accepted) return <DisclaimerScreen onAccept={accept} />
 
@@ -59,6 +105,10 @@ export default function App() {
 
   return (
     <div className="app">
+      <div className="topbar">
+        <FxToggle />
+      </div>
+
       {view === 'search' ? (
         <SearchScreen
           products={products}

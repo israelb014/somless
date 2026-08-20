@@ -1,6 +1,7 @@
 // מסך רשימה מלאה: טאבים לפי סטטוס, ממוינים לפי עדכון אחרון, עם ספירה.
 import { useMemo, useState } from 'react'
 import ProductCard from './ProductCard.jsx'
+import { EmptySeedArt } from './SeedArt.jsx'
 import { STATUSES, STATUS_ORDER } from '../config.js'
 
 export default function ListScreen({ products, counts, onEdit, onDelete }) {
@@ -42,11 +43,14 @@ export default function ListScreen({ products, counts, onEdit, onDelete }) {
 
       <div className="results">
         {items.length === 0 ? (
-          <p className="results__placeholder">
-            {tab === 'safe'
-              ? 'הרשימה הלבנה מתחילה ריקה — הוסיפו מוצרים שבדקתם בעצמכם מול התווית.'
-              : 'אין עדיין מוצרים בקטגוריה הזו.'}
-          </p>
+          <div className="empty-state fade-in">
+            <EmptySeedArt width={200} />
+            <p className="empty-state__text">
+              {tab === 'safe'
+                ? 'הרשימה הלבנה מתחילה ריקה — הוסיפו מוצרים שבדקתם בעצמכם מול התווית.'
+                : 'אין עדיין מוצרים בקטגוריה הזו.'}
+            </p>
+          </div>
         ) : (
           items.map((p, i) => (
             <ProductCard key={p.id} product={p} index={i} onEdit={onEdit} onDelete={onDelete} />
