@@ -7,18 +7,17 @@ on:
       - claude/somless-pwa-app-qal8ry
   workflow_dispatch:
 
+# הפרסום נעשה בדחיפה לענף gh-pages, ולא דרך ה-Pages API —
+# ה-GITHUB_TOKEN של Actions לא מורשה ליצור אתר Pages בריפו הזה.
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# פריסה אחת בכל רגע נתון; ריצה חדשה לא מבטלת פריסה שכבר רצה
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,30 +27,20 @@ jobs:
           node-version: 22
           cache: npm
 
-      # enablement: true מפעיל את GitHub Pages בריפו אם הוא עדיין לא מופעל
-      - name: Configure Pages
-        id: pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
       - run: npm ci
 
-      # base_path מגיע מ-configure-pages (למשל /somless/) כדי שהנכסים ייטענו
-      # נכון גם תחת תת-נתיב
+      # האתר מתארח תחת /<שם-הריפו>/ — ה-base חייב להתאים
       - name: Build
-        run: npm run build -- --base="${{ steps.pages.outputs.base_path }}/"
+        run: npm run build -- --base="/${GITHUB_REPOSITORY#*/}/"
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish to gh-pages
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "Deploy ${GITHUB_SHA:0:7}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
