@@ -138,8 +138,15 @@ scripts/
 
 ## פריסה
 
+האתר חי בכתובת **https://israelb014.github.io/somless/**
+
 אוטומטית לחלוטין: כל push לענף ברירת המחדל מריץ את `.github/workflows/deploy.yml`,
-שבונה עם ה-base path הנכון ופורס ל-GitHub Pages. אין צעדים ידניים.
+שבונה עם ה-base path הנכון ודוחף את `dist/` לענף `gh-pages` — ומשם GitHub Pages
+מגיש אותו. אין צעדים ידניים.
+
+הפרסום נעשה בדחיפה לענף ולא דרך ה-Pages API בכוונה: ה-`GITHUB_TOKEN` של Actions
+מקבל `Pages: write` אבל endpoint יצירת האתר מחזיר 403 בריפו הזה. דחיפה ל-`gh-pages`
+דורשת רק `contents: write` ועובדת.
 
 ## מחוץ לסקופ
 
