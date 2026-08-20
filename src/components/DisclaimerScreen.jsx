@@ -1,4 +1,4 @@
-// מסך פתיחה ראשון — אישור הדיסקליימר נשמר ב-Firestore פר-משתמש.
+// מסך פתיחה ראשון — אישור הדיסקליימר נשמר על המכשיר (IndexedDB).
 import { useState } from 'react'
 import { InfoIcon, ShieldIcon } from './Icons.jsx'
 import { DISCLAIMER } from '../config.js'

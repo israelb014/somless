@@ -1,60 +1,117 @@
-// כתיבה/מחיקה של מוצרים ב-Firestore. כל שמירה מעדכנת updatedAt ו-updatedBy.
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-  updateDoc,
-} from 'firebase/firestore'
-import { db } from '../firebase.js'
-import { ACTIVE_ALLERGEN, FAMILY_ID } from '../config.js'
-import { normalize } from './normalize.js'
+// ---------------------------------------------------------------------------
+// שכבת הנתונים: איחוד המאגר המרכזי (data/products.json, לקריאה בלבד)
+// עם ההוספות המקומיות של המכשיר (IndexedDB).
+// ---------------------------------------------------------------------------
+import { ACTIVE_ALLERGEN } from '../config.js'
+import { normalize, tokenize } from './normalize.js'
+import bundledDb from '../../data/products.json'
+import { deleteLocalProduct, getLocalProducts, newLocalId, putLocalProduct } from './localdb.js'
 
-export function productsCollection(familyId = FAMILY_ID) {
-  return collection(db, 'families', familyId, 'products')
-}
+/** כתובת המאגר המרכזי — יחסית ל-base של האתר (עובד גם תחת תת-נתיב). */
+export const PRODUCTS_URL = `${import.meta.env.BASE_URL}data/products.json`
 
-function userLabel(user) {
-  return (user?.email || '').toLowerCase() || user?.uid || 'unknown'
+/** מכין מוצר לחיפוש: שדות מנורמלים מחושבים מראש. */
+export function prepareProduct(raw, isLocal) {
+  const name = raw.name || ''
+  const brand = raw.brand || ''
+  const updatedAt = raw.updatedAt ? new Date(raw.updatedAt) : null
+  return {
+    ...raw,
+    name,
+    brand,
+    isLocal: Boolean(isLocal),
+    nameNormalized: normalize(name),
+    searchText: normalize(`${name} ${brand}`),
+    searchTokens: tokenize(`${name} ${brand}`),
+    status: raw.allergens?.[ACTIVE_ALLERGEN] || null,
+    updatedAtDate: updatedAt && !Number.isNaN(updatedAt.getTime()) ? updatedAt : null,
+    updatedAtMs: updatedAt && !Number.isNaN(updatedAt.getTime()) ? updatedAt.getTime() : 0,
+  }
 }
 
 /**
- * יוצר מוצר חדש.
- * allergens נשמר כמפה כדי לתמוך בעתיד בכמה אלרגנים.
+ * טוען את המאגר המרכזי. מנסה רשת/קאש של ה-service worker, ונופל לעותק
+ * המצורף ל-bundle — כך שהאפליקציה שמישה מיד גם בהרצה ראשונה ללא רשת.
  */
-export function createProduct({ name, brand, status, note }, user, familyId = FAMILY_ID) {
-  const trimmed = name.trim()
-  return addDoc(productsCollection(familyId), {
-    name: trimmed,
-    nameNormalized: normalize(trimmed),
+export async function loadCentralDb() {
+  try {
+    const res = await fetch(PRODUCTS_URL, { cache: 'no-cache' })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    if (!Array.isArray(data?.products)) throw new Error('malformed products.json')
+    return data
+  } catch (err) {
+    console.warn('נפילה לעותק המצורף של המאגר:', err)
+    return bundledDb
+  }
+}
+
+export function loadLocalProducts() {
+  return getLocalProducts().catch((err) => {
+    console.warn('IndexedDB לא זמין:', err)
+    return []
+  })
+}
+
+/** יוצר הוספה מקומית חדשה ומחזיר את הרשומה שנשמרה. */
+export async function createLocalProduct({ name, brand, status, note }) {
+  const now = new Date().toISOString()
+  const record = {
+    id: newLocalId(),
+    name: name.trim(),
     brand: (brand || '').trim(),
     allergens: { [ACTIVE_ALLERGEN]: status },
     note: (note || '').trim(),
-    source: 'user',
-    createdAt: serverTimestamp(),
-    createdBy: userLabel(user),
-    updatedAt: serverTimestamp(),
-    updatedBy: userLabel(user),
-  })
+    source: 'local',
+    createdAt: now,
+    updatedAt: now,
+  }
+  await putLocalProduct(record)
+  return record
 }
 
-/** מעדכן מוצר קיים, תוך שמירה על שאר האלרגנים במפה. */
-export function saveProduct(product, { name, brand, status, note }, user, familyId = FAMILY_ID) {
-  const trimmed = name.trim()
-  const ref = doc(db, 'families', familyId, 'products', product.id)
-  return updateDoc(ref, {
-    name: trimmed,
-    nameNormalized: normalize(trimmed),
+/** מעדכן הוספה מקומית קיימת. updatedAt מתעדכן אוטומטית. */
+export async function saveLocalProduct(product, { name, brand, status, note }) {
+  const record = {
+    ...product,
+    name: name.trim(),
     brand: (brand || '').trim(),
     allergens: { ...(product.allergens || {}), [ACTIVE_ALLERGEN]: status },
     note: (note || '').trim(),
-    source: product.source === 'seed' ? 'seed-edited' : product.source || 'user',
-    updatedAt: serverTimestamp(),
-    updatedBy: userLabel(user),
-  })
+    updatedAt: new Date().toISOString(),
+  }
+  // שדות עזר של החיפוש לא נשמרים ב-IndexedDB
+  delete record.isLocal
+  delete record.nameNormalized
+  delete record.searchText
+  delete record.searchTokens
+  delete record.status
+  delete record.updatedAtDate
+  delete record.updatedAtMs
+  await putLocalProduct(record)
+  return record
 }
 
-export function removeProduct(productId, familyId = FAMILY_ID) {
-  return deleteDoc(doc(db, 'families', familyId, 'products', productId))
+export function removeLocalProduct(id) {
+  return deleteLocalProduct(id)
+}
+
+/** מייצא את ההוספות המקומיות כ-JSON למיזוג לתוך data/products.json. */
+export function exportLocalProducts(localProducts) {
+  return JSON.stringify(
+    {
+      kind: 'somless-additions',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      products: localProducts.map((p) => ({
+        name: p.name,
+        brand: p.brand || '',
+        allergens: { [ACTIVE_ALLERGEN]: p.status },
+        note: p.note || '',
+        source: 'local',
+      })),
+    },
+    null,
+    2
+  )
 }

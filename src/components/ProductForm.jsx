@@ -1,4 +1,4 @@
-// מסך הוספה/עריכה של מוצר.
+// מסך הוספה/עריכה של מוצר. ההוספות נשמרות על המכשיר בלבד (IndexedDB).
 import { useEffect, useRef, useState } from 'react'
 import StatusRing from './StatusRing.jsx'
 import { BackIcon } from './Icons.jsx'
@@ -33,7 +33,7 @@ export default function ProductForm({ initial, onSave, onCancel }) {
       await onSave({ name, brand, status, note })
     } catch (err) {
       console.error(err)
-      setError('השמירה נכשלה. בדקו חיבור ונסו שוב.')
+      setError('השמירה נכשלה. ייתכן שהדפדפן חוסם אחסון מקומי.')
       setSaving(false)
     }
   }
@@ -44,8 +44,13 @@ export default function ProductForm({ initial, onSave, onCancel }) {
         <button type="button" className="icon-btn" onClick={onCancel} aria-label="חזרה">
           <BackIcon />
         </button>
-        <h1 className="screen__title">{isEdit ? 'עריכת מוצר' : 'הוספת מוצר'}</h1>
+        <h1 className="screen__title">{isEdit ? 'עריכת הוספה' : 'הוספת מוצר'}</h1>
       </header>
+
+      <p className="form__scope">
+        נשמר על המכשיר הזה בלבד ומסומן בתוצאות כ"מקומי". אפשר לשתף את ההוספות
+        ממסך "שלי" כדי לצרף אותן למאגר המשפחתי.
+      </p>
 
       <form className="form" onSubmit={handleSubmit}>
         <label className="field">

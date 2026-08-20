@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-20",
+  "allergen": "sesame",
+  "products": [
+    {
+      "id": "p001",
+      "name": "טחינה גולמית",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p002",
+      "name": "טחינה מוכנה",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p003",
+      "name": "חלווה",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p004",
+      "name": "סלט חצילים בטחינה",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p005",
+      "name": "סלטים עם טחינה (אמבה וכדומה)",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p006",
+      "name": "בייגלה ירושלמי עם שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p007",
+      "name": "מקלות שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p008",
+      "name": "חטיפי שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p009",
+      "name": "עוגיות שומשום / אבו שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p010",
+      "name": "לחמניות המבורגר עם שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p011",
+      "name": "פיתות ולחמים עם ציפוי שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p012",
+      "name": "בורקס עם שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p013",
+      "name": "ג'בנה עם שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p014",
+      "name": "שמן שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p015",
+      "name": "סושי עם שמן או זרעי שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p016",
+      "name": "גומאסיו",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p017",
+      "name": "זעתר",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p018",
+      "name": "מנת פלאפל עם טחינה",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p019",
+      "name": "סביח",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p020",
+      "name": "קרקרים עם שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p021",
+      "name": "גרנולה עם שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "contains"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p022",
+      "name": "חומוס מוכן ללא טחינה מוצהרת",
+      "brand": "",
+      "allergens": {
+        "sesame": "may_contain"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p023",
+      "name": "ופלים ועוגיות ממאפייה שמעבדת שומשום",
+      "brand": "",
+      "allergens": {
+        "sesame": "may_contain"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p024",
+      "name": "לחמים ומאפים ממאפייה שכונתית",
+      "brand": "",
+      "allergens": {
+        "sesame": "may_contain"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p025",
+      "name": "חטיפים מקווי ייצור משותפים",
+      "brand": "",
+      "allergens": {
+        "sesame": "may_contain"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    },
+    {
+      "id": "p026",
+      "name": "קרקרים ופריכיות ללא סימון ברור",
+      "brand": "",
+      "allergens": {
+        "sesame": "may_contain"
+      },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    }
+  ]
+}

@@ -105,14 +105,49 @@ export function InfoIcon({ size = 18, ...p }) {
   )
 }
 
-export function GoogleIcon({ size = 20, ...p }) {
-  // לוגו Google הרשמי — צבעים מקוריים, ללא stroke
+
+export function PhoneIcon({ size = 16, ...p }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" {...p} aria-hidden="true">
-      <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.2-.4-4.7H24v9h11.9c-.5 2.8-2.1 5.1-4.4 6.7v5.5h7.1c4.2-3.8 6.5-9.5 6.5-16.5z" />
-      <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.6-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.6-3.9-12.4-9.1H4.3v5.7C8 41.2 15.4 46 24 46z" />
-      <path fill="#FBBC05" d="M11.6 28.2c-.5-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.3A22 22 0 002 24c0 3.5.8 6.9 2.3 9.9l7.3-5.7z" />
-      <path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8 6.8 4.3 13.8l7.3 5.7c1.8-5.2 6.6-8.8 12.4-8.8z" />
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} {...p} aria-hidden="true">
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
+      <path d="M10.8 5.6h2.4" />
+    </svg>
+  )
+}
+
+export function ShareIcon({ size = 20, ...p }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} {...p} aria-hidden="true">
+      <circle cx="17.5" cy="5.8" r="2.8" />
+      <circle cx="6.5" cy="12" r="2.8" />
+      <circle cx="17.5" cy="18.2" r="2.8" />
+      <path d="M9 10.7l6-3.4M9 13.3l6 3.4" />
+    </svg>
+  )
+}
+
+export function CopyIcon({ size = 20, ...p }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} {...p} aria-hidden="true">
+      <rect x="9" y="9" width="11" height="11" rx="2.5" />
+      <path d="M15 6.5V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2h.5" />
+    </svg>
+  )
+}
+
+export function InboxIcon({ size = 22, ...p }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} {...p} aria-hidden="true">
+      <path d="M4 13l2.2-7.3A2 2 0 018.1 4h7.8a2 2 0 011.9 1.4L20 13v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5z" />
+      <path d="M4 13h4l1.2 2.2h5.6L16 13h4" />
+    </svg>
+  )
+}
+
+export function CheckIcon({ size = 20, ...p }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} {...p} aria-hidden="true">
+      <path d="M5 12.5l4.5 4.5L19 7" />
     </svg>
   )
 }

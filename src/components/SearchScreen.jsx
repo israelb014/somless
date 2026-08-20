@@ -6,7 +6,7 @@ import { CloseIcon, PlusIcon, SearchIcon } from './Icons.jsx'
 import { searchProducts } from '../lib/search.js'
 import { DISCLAIMER } from '../config.js'
 
-export default function SearchScreen({ products, loading, onAdd, onEdit, onDelete }) {
+export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
   const [query, setQuery] = useState('')
   const inputRef = useRef(null)
 
@@ -17,7 +17,7 @@ export default function SearchScreen({ products, loading, onAdd, onEdit, onDelet
   // חיפוש מקומי על כל הקשה — המאגר קטן, אין דיבאונס ואין קריאת רשת.
   const results = useMemo(() => searchProducts(products, query), [products, query])
   const trimmed = query.trim()
-  const showEmpty = trimmed.length > 0 && results.length === 0 && !loading
+  const showEmpty = trimmed.length > 0 && results.length === 0
 
   return (
     <div className="screen">

@@ -1,29 +1,42 @@
-// ניווט תחתון: חיפוש · הוספה · רשימה.
-import { ListIcon, PlusIcon, SearchIcon } from './Icons.jsx'
+// ניווט תחתון: חיפוש · רשימה · ההוספות שלי · הוספה.
+import { InboxIcon, ListIcon, PlusIcon, SearchIcon } from './Icons.jsx'
 
-export default function BottomNav({ view, onNavigate, onAdd }) {
+const ITEMS = [
+  { id: 'search', label: 'חיפוש', Icon: SearchIcon },
+  { id: 'list', label: 'רשימה', Icon: ListIcon },
+  { id: 'mine', label: 'שלי', Icon: InboxIcon },
+]
+
+export default function BottomNav({ view, onNavigate, onAdd, localCount }) {
   return (
     <nav className="bottom-nav" aria-label="ניווט ראשי">
+      {ITEMS.map(({ id, label, Icon }) => (
+        <button
+          key={id}
+          type="button"
+          className={`bottom-nav__item${view === id ? ' is-active' : ''}`}
+          aria-current={view === id ? 'page' : undefined}
+          onClick={() => onNavigate(id)}
+        >
+          <span className="bottom-nav__icon">
+            <Icon size={22} />
+            {id === 'mine' && localCount > 0 ? (
+              <span className="bottom-nav__badge">{localCount}</span>
+            ) : null}
+          </span>
+          <span>{label}</span>
+        </button>
+      ))}
+
       <button
         type="button"
-        className={`bottom-nav__item${view === 'search' ? ' is-active' : ''}`}
-        onClick={() => onNavigate('search')}
+        className="bottom-nav__item bottom-nav__item--add"
+        onClick={() => onAdd('')}
       >
-        <SearchIcon size={22} />
-        <span>חיפוש</span>
-      </button>
-
-      <button type="button" className="bottom-nav__fab" onClick={() => onAdd('')} aria-label="הוספת מוצר">
-        <PlusIcon size={26} />
-      </button>
-
-      <button
-        type="button"
-        className={`bottom-nav__item${view === 'list' ? ' is-active' : ''}`}
-        onClick={() => onNavigate('list')}
-      >
-        <ListIcon size={22} />
-        <span>רשימה</span>
+        <span className="bottom-nav__icon bottom-nav__icon--accent">
+          <PlusIcon size={22} />
+        </span>
+        <span>הוספה</span>
       </button>
     </nav>
   )

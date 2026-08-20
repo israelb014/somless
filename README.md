@@ -10,165 +10,103 @@
 | --- | --- | --- |
 | מכיל שומשום | אדום `#EF4444` | לא לתת |
 | עלול להכיל | ענבר `#F59E0B` | ייצור משותף / רכיב לא ברור |
-| נבדק ובטוח | ירוק `#22C55E` | ההורים בדקו מול התווית |
+| נבדק ובטוח | ירוק `#22C55E` | נבדק מול התווית |
 | לא במאגר | אפור | בדקו את התווית + כפתור הוספה מהירה |
 
 > **כלי עזר בלבד — תמיד לבדוק את רשימת הרכיבים על האריזה. מתכונים משתנים.**
 
 ---
 
-## סטאק
+## איך זה בנוי
+
+אתר סטטי לגמרי. **אין שרת, אין מסד נתונים, אין התחברות ואין חשבונות.**
 
 - **Frontend:** Vite + React, עברית, RTL מלא
-- **Backend:** Firebase Firestore בלבד (ללא Cloud Functions)
-- **Auth:** Firebase Auth — Google Sign-In, מוגבל ל-whitelist ב-Security Rules
-- **Hosting:** Firebase Hosting
-- **PWA:** manifest מלא, service worker לקאשינג ה-shell, ו-Firestore offline
-  persistence (ללא localStorage — כל הנתונים ב-Firestore/IndexedDB)
+- **המאגר:** קובץ `data/products.json` בריפו — נטען כקובץ סטטי ונשמר בקאש של
+  ה-service worker, כך שהאפליקציה עובדת בסופר גם ללא קליטה
+- **הוספות מהטלפון:** נשמרות ב-IndexedDB על המכשיר עצמו, מסומנות בתוצאות
+  בתג "מקומי", ולא עוזבות את הטלפון עד שמשתפים אותן
+- **אחסון:** GitHub Pages, נפרס אוטומטית ב-GitHub Actions בכל push
 
----
-
-## 1. יצירת פרויקט Firebase
-
-1. היכנסו ל-[Firebase Console](https://console.firebase.google.com) → **Add project**.
-   קראו לו למשל `somless`. אפשר לכבות Google Analytics.
-2. בתוך הפרויקט: **Build → Authentication → Get started → Sign-in method →
-   Google → Enable**. שמרו.
-   בלשונית **Settings → Authorized domains** ודאו שמופיעים
-   `localhost` ו-`<project-id>.web.app`.
-3. **Build → Firestore Database → Create database** → בחרו אזור
-   (`eur3` / `me-west1`) → **Start in production mode** (החוקים יידרסו בהמשך
-   על ידי `firestore.rules`).
-4. **Project settings → General → Your apps → Web (`</>`)** → רשמו אפליקציה,
-   והעתיקו את אובייקט ה-`firebaseConfig`.
-
-## 2. הגדרת הפרויקט המקומי
+## הרצה מקומית
 
 ```bash
 npm install
-cp .env.example .env
-```
-
-מלאו את `.env` מתוך ה-`firebaseConfig` שהעתקתם, וכן:
-
-```
-VITE_FAMILY_ID=family-main
-```
-
-`VITE_FAMILY_ID` חייב להיות זהה ל-`FAMILY_ID` של סקריפט ה-seed.
-
-עדכנו גם את מזהה הפרויקט ב-`.firebaserc` (`"default": "<project-id>"`).
-
-## 3. הרצת ה-seed (פעם אחת)
-
-ה-seed מזין את מאגר הפתיחה **ואת רשימת המיילים המורשים** (ה-whitelist).
-הוא רץ עם `firebase-admin` — לא צריך להתחבר, ולא נחסם על ידי ה-Security Rules.
-
-1. **Project settings → Service accounts → Generate new private key** — הורידו
-   את קובץ ה-JSON ושמרו אותו בשורש הפרויקט בשם `serviceAccountKey.json`
-   (הקובץ כבר ב-`.gitignore` — **לא לעלות ל-git**).
-2. הריצו:
-
-```bash
-FAMILY_ID=family-main \
-MEMBER_EMAILS="aba@gmail.com,ima@gmail.com" \
-GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json \
-npm run seed
-```
-
-מה נוצר:
-
-- מסמך `families/family-main` עם `members` = רשימת המיילים המורשים
-- 21 מוצרים בסטטוס **מכיל** ו-5 בסטטוס **עלול להכיל**, ברמת קטגוריה בלבד
-  (ללא מותגים), כל אחד עם `note: "רשומת פתיחה — יש לאמת מול התווית"` ו-`source: "seed"`
-- **הרשימה הלבנה (safe) נשארת ריקה בכוונה** — רק ההורים מוסיפים אליה מוצרים
-  שבדקו בעצמם מול התווית
-
-הסקריפט אידמפוטנטי: הרצה חוזרת לא תיצור כפילויות, ורק תעדכן את רשימת ה-members.
-כדי להוסיף הורה נוסף בהמשך — הריצו שוב עם `MEMBER_EMAILS` מעודכן.
-
-## 4. פיתוח מקומי
-
-```bash
 npm run dev      # http://localhost:5173
 npm run build    # בנייה לפרודקשן → dist/
 npm run preview  # תצוגה מקומית של הבנייה
 npm run icons    # יצירה מחדש של אייקוני ה-PWA
 ```
 
-ה-service worker נרשם רק בבנייה לפרודקשן (`npm run build` + `preview`),
-כדי לא להפריע ל-hot reload בפיתוח.
+ה-service worker נרשם רק בבנייה לפרודקשן, כדי לא להפריע ל-hot reload בפיתוח.
 
-## 5. פריסה
+## התקנה בטלפון
 
-```bash
-npm install -g firebase-tools
-firebase login
-firebase use <project-id>
-
-npm run build
-firebase deploy --only firestore:rules,hosting
-```
-
-האפליקציה תהיה זמינה ב-`https://<project-id>.web.app`.
-בטלפון: פתחו את הכתובת ב-Chrome/Safari → **הוספה למסך הבית** → האפליקציה
-נפתחת במסך מלא ועובדת גם ללא רשת.
+פתחו את כתובת האתר ב-Chrome / Safari → **הוספה למסך הבית**. האפליקציה נפתחת
+במסך מלא, נטענת מיידית, ועובדת גם ללא רשת.
 
 ---
 
-## מודל הנתונים
+## עדכון המאגר: שולחים הודעה לקלוד קוד
 
-```
-families/{familyId}
-  name: string
-  members: string[]          // ה-whitelist — מיילים באותיות קטנות
-  allergens: string[]        // ["sesame"] — מוכן לריבוי אלרגנים
-  createdAt: timestamp
+המאגר המרכזי הוא קובץ בריפו, ולכן עדכון שלו הוא commit. התהליך:
 
-families/{familyId}/products/{productId}
-  name: string
-  nameNormalized: string     // לחיפוש — ללא ניקוד/גרשיים, אותיות סופיות מומרות
-  brand: string
-  allergens: { sesame: "contains" | "may_contain" | "safe" }
-  note: string
-  source: "seed" | "seed-edited" | "user"
-  createdAt / createdBy
-  updatedAt / updatedBy      // מתעדכנים אוטומטית בכל שמירה
+1. בטלפון — מוסיפים מוצרים דרך כפתור **הוספה**. כל הוספה נשמרת על המכשיר
+   ומופיעה בתוצאות עם התג "מקומי".
+2. במסך **שלי** — לוחצים **שיתוף**. הכפתור משתמש ב-Web Share API (ובנפילה,
+   מעתיק ללוח) ומייצא את ההוספות כ-JSON.
+3. שולחים את ה-JSON בהודעה ל-Claude Code עם הבקשה:
+   **"מזג את ההוספות לתוך data/products.json"**.
+4. Claude מריץ את המיזוג, דוחף לריפו, ו-GitHub Actions פורס אוטומטית. תוך
+   דקה-שתיים כל מי שפותח את האתר מקבל את המאגר המעודכן.
 
-families/{familyId}/users/{uid}
-  email, displayName
-  disclaimerAcceptedAt: timestamp   // אישור הדיסקליימר, פר-משתמש
+המיזוג עצמו:
+
+```bash
+npm run merge -- additions.json     # או:  cat additions.json | npm run merge
 ```
 
-המודל מוכן לריבוי אלרגנים (מפת `allergens`) ולריבוי משפחות (הכל תחת
-`families/{familyId}`), למרות שה-MVP מציג אלרגן אחד ומשפחה אחת. `FAMILY_ID`
-ו-`ACTIVE_ALLERGEN` מוגדרים ב-`src/config.js` וכל הקוד עובר דרכם.
+הסקריפט מזהה כפילויות לפי שם מנורמל (מוצר קיים מתעדכן, חדש נוסף), מעלה את
+`version` ומעדכן את `updatedAt`.
 
-## אבטחה
+---
 
-`firestore.rules` מאפשר קריאה/כתיבה רק למשתמש מאומת שהמייל שלו נמצא במערך
-`members` של מסמך המשפחה. אף משתמש לא יכול לכתוב למסמך המשפחה עצמו, ולכן אי
-אפשר להוסיף את עצמו ל-whitelist מהאפליקציה — רק דרך סקריפט ה-seed.
+## מבנה הנתונים
 
-## מבנה הפרויקט
+`data/products.json` — מקור האמת היחיד של המאגר:
 
+```json
+{
+  "version": 1,
+  "updatedAt": "2026-08-20",
+  "allergen": "sesame",
+  "products": [
+    {
+      "id": "p001",
+      "name": "טחינה גולמית",
+      "brand": "",
+      "allergens": { "sesame": "contains" },
+      "note": "רשומת פתיחה — יש לאמת מול התווית",
+      "source": "seed"
+    }
+  ]
+}
 ```
-src/
-  config.js              קונפיג מרכזי: familyId, אלרגן פעיל, צבעי סטטוס, דיסקליימר
-  firebase.js            אתחול Firebase + offline persistence
-  hooks/                 useAuth, useFamily (whitelist), useProducts, useUserPrefs
-  lib/normalize.js       נרמול עברית לחיפוש
-  lib/search.js          חיפוש מקומי + Levenshtein (מימוש עצמי)
-  lib/products.js        יצירה/עדכון/מחיקה של מוצרים
-  components/            מסכים וקומפוננטות (כל האייקונים inline SVG)
-scripts/
-  seed.js                סקריפט ה-seed (firebase-admin)
-  seed-data.js           רשימת מוצרי הפתיחה
-  generate-icons.mjs     יצירת אייקוני PWA ללא תלויות
-public/
-  manifest.webmanifest   manifest ה-PWA
-  sw.js                  service worker
-```
+
+- `allergens` היא מפה ולא שדה בודד — המודל מוכן לריבוי אלרגנים, גם אם ה-UI
+  מציג רק את `ACTIVE_ALLERGEN` שמוגדר ב-`src/config.js`.
+- `source`: `seed` (מאגר הפתיחה), `family` (מוזג מהוספות), `local` (הוספה
+  שקיימת רק על מכשיר אחד).
+- מאגר הפתיחה: 21 מוצרים **מכיל** ו-5 **עלול להכיל**, ברמת קטגוריה בלבד ללא
+  מותגים, כל אחד עם ההערה "רשומת פתיחה — יש לאמת מול התווית".
+- **הרשימה הלבנה (`safe`) מתחילה ריקה בכוונה** — מוצר מסומן כבטוח רק אחרי
+  שנבדק מול התווית.
+
+## פרטיות
+
+הריפו והאתר לא מכילים שום פרט מזהה: אין מיילים, אין שמות, אין חשבונות ואין
+טלמטריה. ההוספות שלכם נשמרות רק על הטלפון שלכם, ומגיעות לריפו רק אם בחרתם
+לשתף אותן. האתר עצמו מכיל שמות מוצרים בלבד.
 
 ## חיפוש
 
@@ -176,9 +114,34 @@ public/
 - נרמול עברית: הסרת ניקוד, המרת אותיות סופיות (ם→מ, ן→נ, ץ→צ, ף→פ, ך→כ),
   הסרת גרשיים ומקפים, lowercase לאנגלית
 - סלחנות לשגיאות כתיב: התאמה חלקית + Levenshtein עד 2 על מילים באורך 4+
+  (מימוש עצמי, ללא ספריות)
 - מיון: התאמה מדויקת → מתחיל ב- → מכיל → fuzzy
 
-## מחוץ לסקופ (MVP)
+## מבנה הפרויקט
+
+```
+data/products.json       המאגר המרכזי — מקור אמת יחיד
+src/
+  config.js              אלרגן פעיל, צבעי סטטוס, טקסט הדיסקליימר
+  hooks/useProducts.js   איחוד המאגר המרכזי עם ההוספות המקומיות
+  hooks/useDisclaimer.js אישור הדיסקליימר (נשמר על המכשיר)
+  lib/normalize.js       נרמול עברית לחיפוש
+  lib/search.js          חיפוש מקומי + Levenshtein
+  lib/localdb.js         עטיפת IndexedDB (ללא ספריות)
+  lib/products.js        טעינת המאגר + CRUD להוספות מקומיות
+  components/            מסכים וקומפוננטות (כל האייקונים inline SVG)
+scripts/
+  merge-additions.mjs    מיזוג הוספות משותפות לתוך המאגר
+  generate-icons.mjs     יצירת אייקוני PWA ללא תלויות
+.github/workflows/deploy.yml   בנייה ופריסה ל-GitHub Pages
+```
+
+## פריסה
+
+אוטומטית לחלוטין: כל push לענף ברירת המחדל מריץ את `.github/workflows/deploy.yml`,
+שבונה עם ה-base path הנכון ופורס ל-GitHub Pages. אין צעדים ידניים.
+
+## מחוץ לסקופ
 
 ללא סריקת ברקוד, ללא OCR, ללא AI, ללא ריבוי אלרגנים ב-UI, ללא דיווחים
-קהילתיים, ללא התראות push, ללא מסך ניהול משפחות.
+קהילתיים, ללא התראות push, ללא התחברות.
