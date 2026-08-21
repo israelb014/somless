@@ -2,10 +2,18 @@
 import { useMemo, useState } from 'react'
 import ProductCard from './ProductCard.jsx'
 import { EmptySeedArt } from './SeedArt.jsx'
+import { useCountUp } from '../hooks/useCountUp.js'
+import { useFx } from '../hooks/useFx.jsx'
 import { STATUSES, STATUS_ORDER } from '../config.js'
+
+function TabCount({ value, animate }) {
+  const shown = useCountUp(value, { duration: 500, enabled: animate })
+  return <span className="tab__count">{shown}</span>
+}
 
 export default function ListScreen({ products, counts, onEdit, onDelete }) {
   const [tab, setTab] = useState('contains')
+  const { reduced } = useFx()
 
   const items = useMemo(
     () =>
@@ -35,7 +43,7 @@ export default function ListScreen({ products, counts, onEdit, onDelete }) {
               onClick={() => setTab(id)}
             >
               <span className="tab__label">{s.shortLabel}</span>
-              <span className="tab__count">{counts[id] || 0}</span>
+              <TabCount value={counts[id] || 0} animate={!reduced} />
             </button>
           )
         })}

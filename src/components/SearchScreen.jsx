@@ -4,6 +4,8 @@ import ProductCard from './ProductCard.jsx'
 import StatusRing from './StatusRing.jsx'
 import { CloseIcon, PlusIcon, SearchIcon } from './Icons.jsx'
 import { EmptySeedArt } from './SeedArt.jsx'
+import SeedLogo from './SeedLogo.jsx'
+import HeroSeeds from './HeroSeeds.jsx'
 import { useFx } from '../hooks/useFx.jsx'
 import { searchProducts } from '../lib/search.js'
 import { DISCLAIMER } from '../config.js'
@@ -36,7 +38,8 @@ export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
   return (
     <div className="screen">
       <div className="search-hero">
-        <h1 className="search-hero__title">סומלס</h1>
+        <HeroSeeds />
+        <SeedLogo />
         <p className="search-hero__subtitle">יש בזה שומשום?</p>
 
         <div className="search-box" ref={boxRef}>
@@ -97,7 +100,14 @@ export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
         ) : null}
 
         {results.map((p, i) => (
-          <ProductCard key={p.id} product={p} index={i} onEdit={onEdit} onDelete={onDelete} />
+          <ProductCard
+            key={p.id}
+            product={p}
+            index={i}
+            variant={i === 0 ? 'hero' : 'compact'}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </div>
 

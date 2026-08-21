@@ -13,6 +13,7 @@ import BottomNav from './components/BottomNav.jsx'
 import SeedCanvas from './components/SeedCanvas.jsx'
 import SeedSpinner from './components/SeedSpinner.jsx'
 import FxToggle from './components/FxToggle.jsx'
+import ThemeToggle from './components/ThemeToggle.jsx'
 
 function Splash() {
   return (
@@ -106,7 +107,10 @@ function AppBody({
   return (
     <div className="app">
       <div className="topbar">
-        <FxToggle />
+        <div className="topbar__tools">
+          <FxToggle />
+          <ThemeToggle />
+        </div>
       </div>
 
       {view === 'search' ? (

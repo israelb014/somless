@@ -6,8 +6,8 @@ import { STATUSES } from '../config.js'
 const UNKNOWN = { color: '#B99B6A', label: 'לא במאגר' }
 
 const SEEDS = 14
-const RING_R = 18
-const SEED_H = 7
+const RING_R = 17.2
+const SEED_H = 6.6
 const BUILD_MS = 400
 
 function RingSeeds({ color, animate }) {

@@ -22,6 +22,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // קובע את הערכה לפי הגדרת המערכת עוד לפני הצביעה הראשונה,
+      // כדי שלא יהיה הבזק. ההעדפה השמורה ב-IndexedDB מתקנת מיד אחר כך.
+      try {
+        document.documentElement.dataset.theme =
+          matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+      } catch (e) {}
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

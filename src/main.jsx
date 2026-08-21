@@ -2,13 +2,16 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import { FxProvider } from './hooks/useFx.jsx'
+import { ThemeProvider } from './hooks/useTheme.jsx'
 import './styles.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <FxProvider>
-      <App />
-    </FxProvider>
+    <ThemeProvider>
+      <FxProvider>
+        <App />
+      </FxProvider>
+    </ThemeProvider>
   </StrictMode>
 )
 

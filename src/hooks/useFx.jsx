@@ -42,16 +42,25 @@ export function FxProvider({ children }) {
     setPref(KEY, value).catch(() => {})
   }, [])
 
-  // burst גלובלי על לחיצות — נרשם פעם אחת, לא מעכב שום handler
+  // burst גלובלי על לחיצות — נרשם פעם אחת, לא מעכב שום handler.
+  // מאזינים ל-click ולא ל-pointerdown: מגע שמתחיל גלילה על כרטיס מפעיל
+  // pointerdown אבל לא click, ולכן גלילה ברשימה לא מפזרת זרעים.
   useEffect(() => {
-    function onPointerDown(e) {
+    function onClick(e) {
       if (!fx.isEnabled()) return
       const target = e.target?.closest?.(CLICKABLE)
       if (!target) return
-      fx.burst(e.clientX, e.clientY)
+      // הפעלה במקלדת מגיעה בלי קואורדינטות — יורים ממרכז האלמנט
+      let { clientX: x, clientY: y } = e
+      if (!x && !y) {
+        const r = target.getBoundingClientRect()
+        x = r.left + r.width / 2
+        y = r.top + r.height / 2
+      }
+      fx.burst(x, y)
     }
-    document.addEventListener('pointerdown', onPointerDown, { passive: true })
-    return () => document.removeEventListener('pointerdown', onPointerDown)
+    document.addEventListener('click', onClick, { passive: true })
+    return () => document.removeEventListener('click', onClick)
   }, [])
 
   const value = {
