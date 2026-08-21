@@ -1,8 +1,9 @@
 // ניווט תחתון: חיפוש · רשימה · ההוספות שלי · הוספה.
-import { InboxIcon, ListIcon, PlusIcon, SearchIcon } from './Icons.jsx'
+import { BarcodeIcon, InboxIcon, ListIcon, PlusIcon, SearchIcon } from './Icons.jsx'
 
 const ITEMS = [
   { id: 'search', label: 'חיפוש', Icon: SearchIcon },
+  { id: 'scan', label: 'סריקה', Icon: BarcodeIcon },
   { id: 'list', label: 'רשימה', Icon: ListIcon },
   { id: 'mine', label: 'שלי', Icon: InboxIcon },
 ]

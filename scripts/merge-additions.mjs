@@ -59,12 +59,16 @@ for (const item of incoming) {
     continue
   }
   const key = normalize(name)
+  const incomingCodes = Array.isArray(item.barcodes) ? item.barcodes.map(String) : []
   const existing = byName.get(key)
   if (existing) {
     existing.name = name
     existing.brand = (item.brand || existing.brand || '').trim()
     existing.allergens = { ...existing.allergens, [db.allergen]: status }
     existing.note = (item.note || '').trim()
+    // ברקודים מצטברים — שיוך שנעשה בטלפון לא הולך לאיבוד
+    const merged = [...new Set([...(existing.barcodes || []), ...incomingCodes])]
+    if (merged.length) existing.barcodes = merged
     existing.source = 'family'
     updated++
     continue
@@ -81,6 +85,7 @@ for (const item of incoming) {
     note: (item.note || '').trim(),
     source: 'family',
   }
+  if (incomingCodes.length) record.barcodes = [...new Set(incomingCodes)]
   db.products.push(record)
   byName.set(key, record)
   added++

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useProducts } from './hooks/useProducts.js'
 import { useDisclaimer } from './hooks/useDisclaimer.js'
 import { useFx } from './hooks/useFx.jsx'
+import { useScanSound } from './hooks/useScanSound.js'
+import { primeAudio } from './lib/alertFx.js'
 
 import DisclaimerScreen from './components/DisclaimerScreen.jsx'
 import SearchScreen from './components/SearchScreen.jsx'
@@ -10,6 +12,7 @@ import MyAdditionsScreen from './components/MyAdditionsScreen.jsx'
 import ProductForm from './components/ProductForm.jsx'
 import ConfirmDialog from './components/ConfirmDialog.jsx'
 import BottomNav from './components/BottomNav.jsx'
+import ScanScreen from './components/ScanScreen.jsx'
 import SeedCanvas from './components/SeedCanvas.jsx'
 import SeedSpinner from './components/SeedSpinner.jsx'
 import FxToggle from './components/FxToggle.jsx'
@@ -31,8 +34,15 @@ export default function App() {
     useProducts()
   const { accepted, accept } = useDisclaimer()
   const { rain } = useFx()
+  const scanSound = useScanSound()
 
-  const [view, setView] = useState('search') // search | list | mine
+  const [view, setView] = useState('search') // search | scan | list | mine
+
+  // ה-AudioContext חייב להיפתח בתוך ג'סטת משתמש, אחרת התראת הסריקה שותקת
+  function navigate(next) {
+    if (next === 'scan') primeAudio()
+    setView(next)
+  }
   const [editing, setEditing] = useState(null) // מוצר בעריכה / טיוטה חדשה
   const [pendingDelete, setPendingDelete] = useState(null)
 
@@ -59,7 +69,8 @@ export default function App() {
         counts={counts}
         dbMeta={dbMeta}
         view={view}
-        setView={setView}
+        setView={navigate}
+        scanSound={scanSound}
         editing={editing}
         setEditing={setEditing}
         pendingDelete={pendingDelete}
@@ -75,13 +86,36 @@ export default function App() {
 function AppBody({
   loading, accepted, accept, products, local, counts, dbMeta,
   view, setView, editing, setEditing, pendingDelete, setPendingDelete,
-  addLocal, updateLocal, deleteLocal,
+  addLocal, updateLocal, deleteLocal, scanSound,
 }) {
   if (accepted === null || loading) return <Splash />
   if (!accepted) return <DisclaimerScreen onAccept={accept} />
 
   function openAdd(prefillName) {
     setEditing({ name: prefillName || '', status: 'contains' })
+  }
+
+  /** הוספה שמגיעה מהסריקה — עם השם, המותג, הסטטוס והברקוד כבר ממולאים. */
+  function openAddFromScan({ name, brand, status, barcode, note }) {
+    setEditing({
+      name: name || '',
+      brand: brand || '',
+      status: status || 'may_contain',
+      note: note || '',
+      barcode,
+    })
+  }
+
+  /** שיוך ברקוד למוצר קיים — נשמר כהוספה מקומית שמרחיבה את הרשומה. */
+  async function linkBarcode(product, barcode) {
+    await addLocal({
+      name: product.name,
+      brand: product.brand,
+      status: product.status,
+      note: product.note || '',
+      barcodes: [...(product.barcodes || []), barcode],
+    })
+    setView('search')
   }
 
   async function handleSave(values) {
@@ -122,6 +156,16 @@ function AppBody({
         />
       ) : null}
 
+      {view === 'scan' ? (
+        <ScanScreen
+          products={products}
+          soundEnabled={scanSound.enabled}
+          onAddProduct={openAddFromScan}
+          onLinkBarcode={linkBarcode}
+          onGoSearch={() => setView('search')}
+        />
+      ) : null}
+
       {view === 'list' ? (
         <ListScreen
           products={products}
@@ -135,6 +179,7 @@ function AppBody({
         <MyAdditionsScreen
           local={local}
           dbMeta={dbMeta}
+          scanSound={scanSound}
           onEdit={setEditing}
           onDelete={setPendingDelete}
         />

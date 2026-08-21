@@ -151,3 +151,31 @@ export function CheckIcon({ size = 20, ...p }) {
     </svg>
   )
 }
+
+export function BarcodeIcon({ size = 22, ...p }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} {...p} aria-hidden="true">
+      <path d="M3 6.5V5.2A1.2 1.2 0 014.2 4h1.6M20.8 6.5V5.2A1.2 1.2 0 0019.6 4H18M3 17.5v1.3A1.2 1.2 0 004.2 20h1.6M20.8 17.5v1.3A1.2 1.2 0 0119.6 20H18" />
+      <path d="M7.4 8v8M10.3 8v8M13.5 8v8M16.6 8v8" />
+    </svg>
+  )
+}
+
+export function CameraOffIcon({ size = 30, ...p }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} {...p} aria-hidden="true">
+      <path d="M20 16.5V8a1.6 1.6 0 00-1.6-1.6h-2.2L15 4.6H9.6" />
+      <path d="M7.2 6.4H5.6A1.6 1.6 0 004 8v8.4A1.6 1.6 0 005.6 18h11.2" />
+      <path d="M3 3l18 18" />
+    </svg>
+  )
+}
+
+export function RefreshIcon({ size = 20, ...p }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} {...p} aria-hidden="true">
+      <path d="M20 12a8 8 0 11-2.4-5.7" />
+      <path d="M20 4v4.4h-4.4" />
+    </svg>
+  )
+}

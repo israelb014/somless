@@ -24,6 +24,7 @@ export function prepareProduct(raw, isLocal) {
     searchText: normalize(`${name} ${brand}`),
     searchTokens: tokenize(`${name} ${brand}`),
     status: raw.allergens?.[ACTIVE_ALLERGEN] || null,
+    barcodes: Array.isArray(raw.barcodes) ? raw.barcodes : [],
     updatedAtDate: updatedAt && !Number.isNaN(updatedAt.getTime()) ? updatedAt : null,
     updatedAtMs: updatedAt && !Number.isNaN(updatedAt.getTime()) ? updatedAt.getTime() : 0,
   }
@@ -54,7 +55,7 @@ export function loadLocalProducts() {
 }
 
 /** יוצר הוספה מקומית חדשה ומחזיר את הרשומה שנשמרה. */
-export async function createLocalProduct({ name, brand, status, note }) {
+export async function createLocalProduct({ name, brand, status, note, barcodes }) {
   const now = new Date().toISOString()
   const record = {
     id: newLocalId(),
@@ -62,6 +63,7 @@ export async function createLocalProduct({ name, brand, status, note }) {
     brand: (brand || '').trim(),
     allergens: { [ACTIVE_ALLERGEN]: status },
     note: (note || '').trim(),
+    barcodes: normaliseBarcodes(barcodes),
     source: 'local',
     createdAt: now,
     updatedAt: now,
@@ -71,13 +73,14 @@ export async function createLocalProduct({ name, brand, status, note }) {
 }
 
 /** מעדכן הוספה מקומית קיימת. updatedAt מתעדכן אוטומטית. */
-export async function saveLocalProduct(product, { name, brand, status, note }) {
+export async function saveLocalProduct(product, { name, brand, status, note, barcodes }) {
   const record = {
     ...product,
     name: name.trim(),
     brand: (brand || '').trim(),
     allergens: { ...(product.allergens || {}), [ACTIVE_ALLERGEN]: status },
     note: (note || '').trim(),
+    barcodes: normaliseBarcodes(barcodes ?? product.barcodes),
     updatedAt: new Date().toISOString(),
   }
   // שדות עזר של החיפוש לא נשמרים ב-IndexedDB
@@ -96,6 +99,23 @@ export function removeLocalProduct(id) {
   return deleteLocalProduct(id)
 }
 
+/** מנקה ומייחד רשימת ברקודים. */
+export function normaliseBarcodes(list) {
+  if (!Array.isArray(list)) return []
+  return [...new Set(list.map((b) => String(b).trim()).filter(Boolean))]
+}
+
+/** מאתר מוצר לפי ברקוד. הוספות מקומיות קודמות למאגר המרכזי. */
+export function findByBarcode(products, barcode) {
+  const code = String(barcode).trim()
+  if (!code) return null
+  return (
+    products.find((p) => p.isLocal && p.barcodes?.includes(code)) ||
+    products.find((p) => p.barcodes?.includes(code)) ||
+    null
+  )
+}
+
 /** מייצא את ההוספות המקומיות כ-JSON למיזוג לתוך data/products.json. */
 export function exportLocalProducts(localProducts) {
   return JSON.stringify(
@@ -108,6 +128,7 @@ export function exportLocalProducts(localProducts) {
         brand: p.brand || '',
         allergens: { [ACTIVE_ALLERGEN]: p.status },
         note: p.note || '',
+        barcodes: p.barcodes || [],
         source: 'local',
       })),
     },

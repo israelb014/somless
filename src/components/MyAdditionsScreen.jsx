@@ -6,7 +6,7 @@ import { CheckIcon, CopyIcon, ShareIcon } from './Icons.jsx'
 import { EmptySeedArt } from './SeedArt.jsx'
 import { exportLocalProducts } from '../lib/products.js'
 
-export default function MyAdditionsScreen({ local, dbMeta, onEdit, onDelete }) {
+export default function MyAdditionsScreen({ local, dbMeta, scanSound, onEdit, onDelete }) {
   const [status, setStatus] = useState('') // '' | 'shared' | 'copied' | 'failed'
   const [payload, setPayload] = useState('')
 
@@ -92,6 +92,26 @@ export default function MyAdditionsScreen({ local, dbMeta, onEdit, onDelete }) {
           </div>
         </>
       )}
+
+      {scanSound ? (
+        <div className="settings-card card">
+          <h2 className="settings-card__title">הגדרות</h2>
+          <label className="settings-row">
+            <span>
+              צליל ורטט בסריקה
+              <span className="settings-row__hint">
+                התראה קולית ורטט כשנסרק מוצר שמכיל או עלול להכיל שומשום
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              className="settings-switch"
+              checked={scanSound.enabled}
+              onChange={(e) => scanSound.setEnabled(e.target.checked)}
+            />
+          </label>
+        </div>
+      ) : null}
 
       <div className="update-note card">
         <h2 className="update-note__title">עדכון המאגר המרכזי</h2>

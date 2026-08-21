@@ -3,7 +3,7 @@
    תיפתח מיידית ותעבוד בסופר גם ללא קליטה. אין שרת ואין נתוני משתמש כאן —
    ההוספות המקומיות חיות ב-IndexedDB. */
 
-const VERSION = 'somless-v5'
+const VERSION = 'somless-v6'
 const SHELL_CACHE = `${VERSION}-shell`
 const ASSET_CACHE = `${VERSION}-assets`
 

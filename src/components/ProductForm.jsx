@@ -1,7 +1,7 @@
 // מסך הוספה/עריכה של מוצר. ההוספות נשמרות על המכשיר בלבד (IndexedDB).
 import { useEffect, useRef, useState } from 'react'
 import StatusRing from './StatusRing.jsx'
-import { BackIcon } from './Icons.jsx'
+import { BackIcon, BarcodeIcon } from './Icons.jsx'
 import { STATUSES, STATUS_ORDER } from '../config.js'
 
 export default function ProductForm({ initial, onSave, onCancel }) {
@@ -10,6 +10,10 @@ export default function ProductForm({ initial, onSave, onCancel }) {
   const [brand, setBrand] = useState(initial?.brand || '')
   const [status, setStatus] = useState(initial?.status || 'contains')
   const [note, setNote] = useState(initial?.note || '')
+  // ברקוד שהגיע מהסריקה, או ברקודים ששמורים כבר על הרשומה
+  const [barcodes] = useState(() =>
+    initial?.barcodes?.length ? initial.barcodes : initial?.barcode ? [initial.barcode] : []
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const nameRef = useRef(null)
@@ -30,7 +34,7 @@ export default function ProductForm({ initial, onSave, onCancel }) {
     setSaving(true)
     setError('')
     try {
-      await onSave({ name, brand, status, note })
+      await onSave({ name, brand, status, note, barcodes })
     } catch (err) {
       console.error(err)
       setError('השמירה נכשלה. ייתכן שהדפדפן חוסם אחסון מקומי.')
@@ -46,6 +50,13 @@ export default function ProductForm({ initial, onSave, onCancel }) {
         </button>
         <h1 className="screen__title">{isEdit ? 'עריכת הוספה' : 'הוספת מוצר'}</h1>
       </header>
+
+      {barcodes.length ? (
+        <p className="form__barcode">
+          <BarcodeIcon size={18} />
+          ברקוד משויך: <span dir="ltr">{barcodes.join(', ')}</span>
+        </p>
+      ) : null}
 
       <p className="form__scope">
         נשמר על המכשיר הזה בלבד ומסומן בתוצאות כ"מקומי". אפשר לשתף את ההוספות
