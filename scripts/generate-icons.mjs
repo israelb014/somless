@@ -1,6 +1,14 @@
 // ---------------------------------------------------------------------------
 // יצירת אייקוני ה-PWA (PNG) ללא תלויות חיצוניות.
-// האייקון: זרע שומשום זהוב על רקע חום-שחור עם glow חם.
+//
+// האייקון: זרע שומשום זהוב-קרם יחיד במרכז ריבוע מלא, על רקע חום-שחור עם
+// radial glow זהוב עדין מהמרכז. בלי טקסט, בלי פינות מעוגלות (מערכות ההפעלה
+// חותכות בעצמן), בלי שום אלמנט נוסף.
+//
+// הזרע תופס 58% מגובה האייקון. רדיוס העיגול החוסם שלו הוא 0.349 מהגודל,
+// לעומת אזור הבטיחות של maskable שהוא 0.400 — כך ששום חלק לא נחתך גם
+// במסכה עגולה של אנדרואיד. אותו ציור משמש את שני ה-purposes.
+//
 // הצורה נלקחת מ-src/lib/seedShape.js — מקור אמת יחיד עם האפליקציה.
 // הרצה:  npm run icons
 // ---------------------------------------------------------------------------
@@ -132,52 +140,47 @@ const mix = (a, b, t) => a + (b - a) * t
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v)
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
 
-const BG_FAR = hex('#140F0B')
-const BG_NEAR = hex('#2A1D12')
-const SEED_LIGHT = hex('#F7DCA0')
-const SEED_DARK = hex('#B57F2C')
-const SEAM_COLOR = hex('#7A4E14')
-const GLOW = hex('#D9A441')
+const BG_FAR = hex('#100B07')
+const BG_NEAR = hex('#2E2013')
+const SEED_LIGHT = hex('#FFF3D6')
+const SEED_MID = hex('#F0CE8C')
+const SEED_DARK = hex('#B07C２B'.replace('２','2'))
+const SEAM_COLOR = hex('#8A5A18')
 
-function sdRoundedRect(px, py, half, r) {
-  const qx = Math.abs(px - 0.5) - (half - r)
-  const qy = Math.abs(py - 0.5) - (half - r)
-  return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r
-}
+/** גובה הזרע כשבר מגובה האייקון — בתוך אזור הבטיחות של maskable. */
+const SEED_HEIGHT = 0.58
+const SEED_TILT = (-12 * Math.PI) / 180
 
 /** צבע הסצנה בנקודה (x, y) בטווח 0..1 — מחזיר [r, g, b, a]. */
-function sample(x, y, { maskable }) {
-  if (!maskable && sdRoundedRect(x, y, 0.5, 0.23) > 0) return [0, 0, 0, 0]
-
-  // רקע חם עם radial glow, כמו באפליקציה
-  const glow = clamp01(1 - Math.hypot(x - 0.66, y - 0.2) / 0.95)
+function sample(x, y) {
+  // רקע: ריבוע מלא, radial glow זהוב מהמרכז
+  const d = Math.hypot(x - 0.5, y - 0.5) / 0.72
+  const glow = clamp01(1 - d)
   let color = BG_FAR.map((c, i) => Math.round(mix(c, BG_NEAR[i], glow * glow)))
 
-  // הזרע: מסובב קלות, ממורכז
-  const scale = maskable ? 0.5 : 0.64 // גובה הזרע כשבר מהאייקון
-  const ang = (-13 * Math.PI) / 180
+  // הזרע: ממורכז, מוטה קלות
   const dx = x - 0.5
   const dy = y - 0.5
-  const rx = dx * Math.cos(ang) - dy * Math.sin(ang)
-  const ry = dx * Math.sin(ang) + dy * Math.cos(ang)
+  const rx = dx * Math.cos(SEED_TILT) - dy * Math.sin(SEED_TILT)
+  const ry = dx * Math.sin(SEED_TILT) + dy * Math.cos(SEED_TILT)
 
   // למרחב הזרע (0..12, 0..18)
-  const sx = (rx / scale) * SEED_H + SEED_W / 2
-  const sy = (ry / scale) * SEED_H + SEED_H / 2
-
-  // הילה זהובה רכה סביב הזרע
-  const halo = clamp01(1 - Math.hypot(rx, ry) / (scale * 0.85))
-  if (halo > 0) color = color.map((c, i) => Math.round(mix(c, GLOW[i], halo * halo * 0.28)))
+  const sx = (rx / SEED_HEIGHT) * SEED_H + SEED_W / 2
+  const sy = (ry / SEED_HEIGHT) * SEED_H + SEED_H / 2
 
   if (sx > -1 && sx < SEED_W + 1 && sy > -1 && sy < SEED_H + 1) {
     if (insidePolygon(sx, sy, SEED_POLY)) {
-      // gradient קרם→זהוב לאורך האלכסון
-      const t = clamp01((sx / SEED_W) * 0.55 + (sy / SEED_H) * 0.65 - 0.12)
-      color = SEED_LIGHT.map((c, i) => Math.round(mix(c, SEED_DARK[i], t)))
+      // gradient קרם→זהוב לאורך האלכסון, כמו בקומפוננטה
+      const t = clamp01((sx / SEED_W) * 0.5 + (sy / SEED_H) * 0.72 - 0.16)
+      color =
+        t < 0.5
+          ? SEED_LIGHT.map((c, i) => Math.round(mix(c, SEED_MID[i], t / 0.5)))
+          : SEED_MID.map((c, i) => Math.round(mix(c, SEED_DARK[i], (t - 0.5) / 0.5)))
+
       // קו התפר
       const seam = distanceToPolyline(sx, sy, SEAM_POLY)
-      if (seam < 0.42) {
-        const k = (1 - seam / 0.42) * 0.75
+      if (seam < 0.4) {
+        const k = (1 - seam / 0.4) * 0.6
         color = color.map((c, i) => Math.round(mix(c, SEAM_COLOR[i], k)))
       }
     }
@@ -186,7 +189,7 @@ function sample(x, y, { maskable }) {
   return [color[0], color[1], color[2], 255]
 }
 
-function render(size, opts) {
+function render(size) {
   const SS = 4
   const buf = Buffer.alloc(size * size * 4)
   for (let y = 0; y < size; y++) {
@@ -196,8 +199,7 @@ function render(size, opts) {
         for (let sx = 0; sx < SS; sx++) {
           const [pr, pg, pb, pa] = sample(
             (x + (sx + 0.5) / SS) / size,
-            (y + (sy + 0.5) / SS) / size,
-            opts
+            (y + (sy + 0.5) / SS) / size
           )
           const w = pa / 255
           r += pr * w; g += pg * w; b += pb * w; a += pa
@@ -218,27 +220,36 @@ function render(size, opts) {
 
 mkdirSync(OUT_DIR, { recursive: true })
 
-for (const [name, size, opts] of [
-  ['icon-192.png', 192, { maskable: false }],
-  ['icon-512.png', 512, { maskable: false }],
-  ['icon-180.png', 180, { maskable: false }],
-  ['icon-maskable-512.png', 512, { maskable: true }],
+// כל הגדלים שה-manifest וה-HTML מפנים אליהם.
+// ה-maskable זהה בציור — הזרע ממילא יושב בתוך אזור הבטיחות.
+for (const [name, size] of [
+  ['icon-192.png', 192],
+  ['icon-512.png', 512],
+  ['icon-maskable-192.png', 192],
+  ['icon-maskable-512.png', 512],
+  ['icon-180.png', 180],
 ]) {
-  writeFileSync(join(OUT_DIR, name), render(size, opts))
+  writeFileSync(join(OUT_DIR, name), render(size))
   console.log(`✓ ${name} (${size}×${size})`)
 }
 
 // favicon וקטורי — אותה צורה בדיוק
 const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect width="48" height="48" rx="11" fill="#140F0B"/>
-  <circle cx="30" cy="14" r="26" fill="#D9A441" opacity="0.16"/>
-  <g transform="translate(24 24) rotate(-13) scale(1.75) translate(-6 -9)">
-    <linearGradient id="s" x1="0.15" y1="0.05" x2="0.9" y2="0.95">
-      <stop offset="0%" stop-color="#F7DCA0"/>
-      <stop offset="100%" stop-color="#B57F2C"/>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="72%">
+      <stop offset="0%" stop-color="#2E2013"/>
+      <stop offset="100%" stop-color="#100B07"/>
+    </radialGradient>
+    <linearGradient id="seed" x1="0.15" y1="0.05" x2="0.9" y2="0.95">
+      <stop offset="0%" stop-color="#FFF3D6"/>
+      <stop offset="50%" stop-color="#F0CE8C"/>
+      <stop offset="100%" stop-color="#B07C2B"/>
     </linearGradient>
-    <path d="${SEED_PATH}" fill="url(#s)"/>
-    <path d="${SEED_SEAM}" fill="none" stroke="#7A4E14" stroke-width="0.7" stroke-linecap="round" opacity="0.8"/>
+  </defs>
+  <rect width="48" height="48" fill="url(#bg)"/>
+  <g transform="translate(24 24) rotate(-12) scale(1.5467) translate(-6 -9)">
+    <path d="${SEED_PATH}" fill="url(#seed)"/>
+    <path d="${SEED_SEAM}" fill="none" stroke="#8A5A18" stroke-width="0.6" stroke-linecap="round" opacity="0.65"/>
   </g>
 </svg>
 `

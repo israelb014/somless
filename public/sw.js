@@ -3,7 +3,7 @@
    תיפתח מיידית ותעבוד בסופר גם ללא קליטה. אין שרת ואין נתוני משתמש כאן —
    ההוספות המקומיות חיות ב-IndexedDB. */
 
-const VERSION = 'somless-v4'
+const VERSION = 'somless-v5'
 const SHELL_CACHE = `${VERSION}-shell`
 const ASSET_CACHE = `${VERSION}-assets`
 
@@ -20,6 +20,9 @@ const SHELL_URLS = [
   url('icons/favicon.svg'),
   url('icons/icon-192.png'),
   url('icons/icon-512.png'),
+  url('icons/icon-maskable-192.png'),
+  url('icons/icon-maskable-512.png'),
+  url('icons/icon-180.png'),
 ]
 
 self.addEventListener('install', (event) => {
