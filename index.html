@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>סומלס — בדיקת שומשום</title>
+    <meta name="description" content="סומלס — בדיקה מהירה האם מוצר מזון מכיל שומשום" />
+    <meta name="theme-color" content="#140F0B" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="סומלס" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-180.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&display=swap" />
+    <style>
+      /* צבע רקע מוקדם — מונע הבזק לבן לפני טעינת ה-CSS */
+      html, body { background: #140F0B; margin: 0; }
+    </style>
+    <script type="module" crossorigin src="/somless/assets/index-CKKQpFJL.js"></script>
+    <link rel="stylesheet" crossorigin href="/somless/assets/index-B6L-hIwN.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // קובע את הערכה לפי הגדרת המערכת עוד לפני הצביעה הראשונה,
+      // כדי שלא יהיה הבזק. ההעדפה השמורה ב-IndexedDB מתקנת מיד אחר כך.
+      try {
+        document.documentElement.dataset.theme =
+          matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+      } catch (e) {}
+    </script>
+  </body>
+</html>
