@@ -1,26 +1,24 @@
 // ---------------------------------------------------------------------------
-// יצירת אייקוני ה-PWA (PNG) ללא תלויות חיצוניות.
+// יצירת אייקוני ה-PWA מתוך assets/icon-source.png — הריבוע המעוגל עם הזרע
+// וטבעת השומשום, בלי תלויות חיצוניות.
 //
-// האייקון: זרע שומשום זהוב-קרם יחיד במרכז ריבוע מלא, על רקע חום-שחור עם
-// radial glow זהוב עדין מהמרכז. בלי טקסט, בלי פינות מעוגלות (מערכות ההפעלה
-// חותכות בעצמן), בלי שום אלמנט נוסף.
+//   any       — המקור כפי שהוא (פינות שקופות; מערכות ההפעלה חותכות בעצמן)
+//   maskable  — התוכן מוקטן ל-78% על רקע אחיד #1E1610, בתוך אזור הבטיחות
 //
-// הזרע תופס 58% מגובה האייקון. רדיוס העיגול החוסם שלו הוא 0.349 מהגודל,
-// לעומת אזור הבטיחות של maskable שהוא 0.400 — כך ששום חלק לא נחתך גם
-// במסכה עגולה של אנדרואיד. אותו ציור משמש את שני ה-purposes.
-//
-// הצורה נלקחת מ-src/lib/seedShape.js — מקור אמת יחיד עם האפליקציה.
 // הרצה:  npm run icons
 // ---------------------------------------------------------------------------
-import { deflateSync } from 'node:zlib'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { deflateSync, inflateSync } from 'node:zlib'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { SEED_PATH, SEED_SEAM, SEED_W, SEED_H } from '../src/lib/seedShape.js'
+import { SEED_PATH, SEED_SEAM } from '../src/lib/seedShape.js'
 
-const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'icons')
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const OUT_DIR = join(ROOT, 'public', 'icons')
+const SOURCE = join(ROOT, 'assets', 'icon-source.png')
+const MASKABLE_BG = [0x1e, 0x16, 0x10]
 
-// --- כתיבת PNG (RGBA, 8 ביט) ----------------------------------------------
+// --- CRC + chunks ---------------------------------------------------------
 
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256)
@@ -67,189 +65,170 @@ function encodePng(width, height, rgba) {
   ])
 }
 
-// --- שיטוח נתיב ה-SVG לפוליגון --------------------------------------------
-// הנתיבים משתמשים רק ב-M / C / Z, ולכן די בפרסר זעיר.
+// --- decode (RGBA/8, כל חמשת הפילטרים) -----------------------------------
 
-function flatten(d, steps = 26) {
-  const tokens = d.match(/[MCZmcz]|-?\d*\.?\d+/g)
-  const pts = []
-  let i = 0
-  let cur = [0, 0]
-  let start = [0, 0]
-  while (i < tokens.length) {
-    const cmd = tokens[i++]
-    if (cmd === 'M') {
-      cur = [parseFloat(tokens[i++]), parseFloat(tokens[i++])]
-      start = cur
-      pts.push(cur)
-    } else if (cmd === 'C') {
-      const p1 = [parseFloat(tokens[i++]), parseFloat(tokens[i++])]
-      const p2 = [parseFloat(tokens[i++]), parseFloat(tokens[i++])]
-      const p3 = [parseFloat(tokens[i++]), parseFloat(tokens[i++])]
-      for (let s = 1; s <= steps; s++) {
-        const t = s / steps
-        const u = 1 - t
-        pts.push([
-          u * u * u * cur[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0],
-          u * u * u * cur[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1],
-        ])
-      }
-      cur = p3
-    } else if (cmd === 'Z' || cmd === 'z') {
-      pts.push(start)
+function paeth(a, b, c) {
+  const p = a + b - c
+  const pa = Math.abs(p - a)
+  const pb = Math.abs(p - b)
+  const pc = Math.abs(p - c)
+  return pa <= pb && pa <= pc ? a : pb <= pc ? b : c
+}
+
+function decodePng(buf) {
+  let pos = 8
+  let width = 0
+  let height = 0
+  let colorType = 6
+  const idat = []
+  while (pos < buf.length) {
+    const len = buf.readUInt32BE(pos)
+    const type = buf.toString('ascii', pos + 4, pos + 8)
+    const data = buf.subarray(pos + 8, pos + 8 + len)
+    if (type === 'IHDR') {
+      width = data.readUInt32BE(0)
+      height = data.readUInt32BE(4)
+      colorType = data[9]
+    } else if (type === 'IDAT') idat.push(data)
+    pos += 12 + len
+  }
+  if (colorType !== 6) throw new Error(`expected RGBA source, got colour type ${colorType}`)
+
+  const raw = inflateSync(Buffer.concat(idat))
+  const bpp = 4
+  const stride = width * bpp
+  const out = Buffer.alloc(stride * height)
+  let off = 0
+  for (let y = 0; y < height; y++) {
+    const filter = raw[off++]
+    const row = raw.subarray(off, off + stride)
+    off += stride
+    const cur = out.subarray(y * stride, (y + 1) * stride)
+    const prev = y > 0 ? out.subarray((y - 1) * stride, y * stride) : null
+    for (let i = 0; i < stride; i++) {
+      const a = i >= bpp ? cur[i - bpp] : 0
+      const b = prev ? prev[i] : 0
+      const c = prev && i >= bpp ? prev[i - bpp] : 0
+      let v = row[i]
+      if (filter === 1) v += a
+      else if (filter === 2) v += b
+      else if (filter === 3) v += (a + b) >> 1
+      else if (filter === 4) v += paeth(a, b, c)
+      cur[i] = v & 0xff
     }
   }
-  return pts
+  return { width, height, px: out }
 }
 
-const SEED_POLY = flatten(SEED_PATH)
-const SEAM_POLY = flatten(SEED_SEAM)
-
-function insidePolygon(px, py, poly) {
-  let inside = false
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i]
-    const [xj, yj] = poly[j]
-    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside
-  }
-  return inside
-}
-
-function distanceToPolyline(px, py, poly) {
-  let best = Infinity
-  for (let i = 1; i < poly.length; i++) {
-    const [ax, ay] = poly[i - 1]
-    const [bx, by] = poly[i]
-    const vx = bx - ax
-    const vy = by - ay
-    const wx = px - ax
-    const wy = py - ay
-    const len2 = vx * vx + vy * vy
-    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, (wx * vx + wy * vy) / len2))
-    const dx = wx - vx * t
-    const dy = wy - vy * t
-    const d = Math.hypot(dx, dy)
-    if (d < best) best = d
-  }
-  return best
-}
-
-// --- הסצנה ----------------------------------------------------------------
-
-const mix = (a, b, t) => a + (b - a) * t
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v)
-const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
-
-const BG_FAR = hex('#100B07')
-const BG_NEAR = hex('#2E2013')
-const SEED_LIGHT = hex('#FFF3D6')
-const SEED_MID = hex('#F0CE8C')
-const SEED_DARK = hex('#B07C２B'.replace('２','2'))
-const SEAM_COLOR = hex('#8A5A18')
-
-/** גובה הזרע כשבר מגובה האייקון — בתוך אזור הבטיחות של maskable. */
-const SEED_HEIGHT = 0.58
-const SEED_TILT = (-12 * Math.PI) / 180
-
-/** צבע הסצנה בנקודה (x, y) בטווח 0..1 — מחזיר [r, g, b, a]. */
-function sample(x, y) {
-  // רקע: ריבוע מלא, radial glow זהוב מהמרכז
-  const d = Math.hypot(x - 0.5, y - 0.5) / 0.72
-  const glow = clamp01(1 - d)
-  let color = BG_FAR.map((c, i) => Math.round(mix(c, BG_NEAR[i], glow * glow)))
-
-  // הזרע: ממורכז, מוטה קלות
-  const dx = x - 0.5
-  const dy = y - 0.5
-  const rx = dx * Math.cos(SEED_TILT) - dy * Math.sin(SEED_TILT)
-  const ry = dx * Math.sin(SEED_TILT) + dy * Math.cos(SEED_TILT)
-
-  // למרחב הזרע (0..12, 0..18)
-  const sx = (rx / SEED_HEIGHT) * SEED_H + SEED_W / 2
-  const sy = (ry / SEED_HEIGHT) * SEED_H + SEED_H / 2
-
-  if (sx > -1 && sx < SEED_W + 1 && sy > -1 && sy < SEED_H + 1) {
-    if (insidePolygon(sx, sy, SEED_POLY)) {
-      // gradient קרם→זהוב לאורך האלכסון, כמו בקומפוננטה
-      const t = clamp01((sx / SEED_W) * 0.5 + (sy / SEED_H) * 0.72 - 0.16)
-      color =
-        t < 0.5
-          ? SEED_LIGHT.map((c, i) => Math.round(mix(c, SEED_MID[i], t / 0.5)))
-          : SEED_MID.map((c, i) => Math.round(mix(c, SEED_DARK[i], (t - 0.5) / 0.5)))
-
-      // קו התפר
-      const seam = distanceToPolyline(sx, sy, SEAM_POLY)
-      if (seam < 0.4) {
-        const k = (1 - seam / 0.4) * 0.6
-        color = color.map((c, i) => Math.round(mix(c, SEAM_COLOR[i], k)))
-      }
-    }
-  }
-
-  return [color[0], color[1], color[2], 255]
-}
-
-function render(size) {
-  const SS = 4
-  const buf = Buffer.alloc(size * size * 4)
+/** הקטנה בממוצע שטח — חדה ונקייה לאייקונים. */
+function resize(src, size) {
+  const out = Buffer.alloc(size * size * 4)
+  const ratio = src.width / size
   for (let y = 0; y < size; y++) {
+    const y0 = Math.floor(y * ratio)
+    const y1 = Math.min(Math.ceil((y + 1) * ratio), src.height)
     for (let x = 0; x < size; x++) {
-      let r = 0, g = 0, b = 0, a = 0
-      for (let sy = 0; sy < SS; sy++) {
-        for (let sx = 0; sx < SS; sx++) {
-          const [pr, pg, pb, pa] = sample(
-            (x + (sx + 0.5) / SS) / size,
-            (y + (sy + 0.5) / SS) / size
-          )
-          const w = pa / 255
-          r += pr * w; g += pg * w; b += pb * w; a += pa
+      const x0 = Math.floor(x * ratio)
+      const x1 = Math.min(Math.ceil((x + 1) * ratio), src.width)
+      let r = 0, g = 0, b = 0, a = 0, n = 0
+      for (let sy = y0; sy < y1; sy++) {
+        for (let sx = x0; sx < x1; sx++) {
+          const i = (sy * src.width + sx) * 4
+          const al = src.px[i + 3] / 255
+          r += src.px[i] * al
+          g += src.px[i + 1] * al
+          b += src.px[i + 2] * al
+          a += src.px[i + 3]
+          n++
         }
       }
-      const n = SS * SS
-      const aSum = a / n
-      const wSum = aSum / 255 || 1
       const i = (y * size + x) * 4
-      buf[i] = Math.round(r / n / wSum)
-      buf[i + 1] = Math.round(g / n / wSum)
-      buf[i + 2] = Math.round(b / n / wSum)
-      buf[i + 3] = Math.round(aSum)
+      const alpha = a / n
+      const w = alpha / 255 || 1
+      out[i] = Math.round(r / n / w)
+      out[i + 1] = Math.round(g / n / w)
+      out[i + 2] = Math.round(b / n / w)
+      out[i + 3] = Math.round(alpha)
     }
   }
-  return encodePng(size, size, buf)
+  return { width: size, height: size, px: out }
+}
+
+/** מרכיב את התוכן המוקטן על רקע אחיד — גרסת maskable. */
+function onSolid(img, size, scale) {
+  const inner = resize(img, Math.round(size * scale))
+  const out = Buffer.alloc(size * size * 4)
+  for (let i = 0; i < size * size; i++) {
+    out[i * 4] = MASKABLE_BG[0]
+    out[i * 4 + 1] = MASKABLE_BG[1]
+    out[i * 4 + 2] = MASKABLE_BG[2]
+    out[i * 4 + 3] = 255
+  }
+  const off = Math.round((size - inner.width) / 2)
+  for (let y = 0; y < inner.height; y++) {
+    for (let x = 0; x < inner.width; x++) {
+      const s = (y * inner.width + x) * 4
+      const alpha = inner.px[s + 3] / 255
+      if (alpha === 0) continue
+      const d = ((y + off) * size + (x + off)) * 4
+      for (let k = 0; k < 3; k++) {
+        out[d + k] = Math.round(inner.px[s + k] * alpha + out[d + k] * (1 - alpha))
+      }
+    }
+  }
+  return { width: size, height: size, px: out }
 }
 
 mkdirSync(OUT_DIR, { recursive: true })
+const source = decodePng(readFileSync(SOURCE))
+console.log(`source ${source.width}×${source.height}`)
 
-// כל הגדלים שה-manifest וה-HTML מפנים אליהם.
-// ה-maskable זהה בציור — הזרע ממילא יושב בתוך אזור הבטיחות.
 for (const [name, size] of [
   ['icon-192.png', 192],
   ['icon-512.png', 512],
-  ['icon-maskable-192.png', 192],
-  ['icon-maskable-512.png', 512],
   ['icon-180.png', 180],
 ]) {
-  writeFileSync(join(OUT_DIR, name), render(size))
+  const img = size === source.width ? source : resize(source, size)
+  writeFileSync(join(OUT_DIR, name), encodePng(size, size, img.px))
   console.log(`✓ ${name} (${size}×${size})`)
 }
 
-// favicon וקטורי — אותה צורה בדיוק
+for (const [name, size] of [
+  ['icon-maskable-192.png', 192],
+  ['icon-maskable-512.png', 512],
+]) {
+  const img = onSolid(source, size, 0.78)
+  writeFileSync(join(OUT_DIR, name), encodePng(size, size, img.px))
+  console.log(`✓ ${name} (${size}×${size}, safe zone)`)
+}
+
+// favicon — אותו רעיון בווקטור: זרע מרכזי וטבעת זרעים
+const RING = 22
+const ringSeeds = Array.from({ length: RING }, (_, i) => {
+  const a = (i / RING) * 360
+  const rad = (a * Math.PI) / 180
+  const x = (24 + 17.4 * Math.sin(rad)).toFixed(2)
+  const y = (24 - 17.4 * Math.cos(rad)).toFixed(2)
+  return `<g transform="translate(${x} ${y}) rotate(${a.toFixed(1)}) scale(0.26) translate(-6 -9)"><path d="${SEED_PATH}" fill="#EFE0C0"/></g>`
+}).join('')
+
 const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="50%" r="72%">
-      <stop offset="0%" stop-color="#2E2013"/>
-      <stop offset="100%" stop-color="#100B07"/>
+    <radialGradient id="bg" cx="50%" cy="46%" r="70%">
+      <stop offset="0%" stop-color="#3A2A1C"/>
+      <stop offset="100%" stop-color="#191109"/>
     </radialGradient>
-    <linearGradient id="seed" x1="0.15" y1="0.05" x2="0.9" y2="0.95">
-      <stop offset="0%" stop-color="#FFF3D6"/>
-      <stop offset="50%" stop-color="#F0CE8C"/>
-      <stop offset="100%" stop-color="#B07C2B"/>
+    <linearGradient id="seed" x1="0.2" y1="0.05" x2="0.85" y2="0.95">
+      <stop offset="0%" stop-color="#FFF6E2"/>
+      <stop offset="55%" stop-color="#F0DCB0"/>
+      <stop offset="100%" stop-color="#C9A463"/>
     </linearGradient>
   </defs>
-  <rect width="48" height="48" fill="url(#bg)"/>
-  <g transform="translate(24 24) rotate(-12) scale(1.5467) translate(-6 -9)">
+  <rect width="48" height="48" rx="11" fill="url(#bg)"/>
+  ${ringSeeds}
+  <g transform="translate(24 24) rotate(-10) scale(1.15) translate(-6 -9)">
     <path d="${SEED_PATH}" fill="url(#seed)"/>
-    <path d="${SEED_SEAM}" fill="none" stroke="#8A5A18" stroke-width="0.6" stroke-linecap="round" opacity="0.65"/>
+    <path d="${SEED_SEAM}" fill="none" stroke="#B4914E" stroke-width="0.6" stroke-linecap="round" opacity="0.6"/>
   </g>
 </svg>
 `

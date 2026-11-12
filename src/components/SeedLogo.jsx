@@ -1,6 +1,8 @@
-// כותרת "סומלס" — זרע שנבקע ונפתח בכניסה הראשונה למסך החיפוש בכל session.
+// הכותרת "סומלס": זרע מוזהב יושב בתוך המ"ם, ובכניסה הראשונה בכל session
+// זרע נבקע ונפתח מעל המילה.
 import { useId, useState } from 'react'
 import { SEED_PATH, SEED_SEAM } from '../lib/seedShape.js'
+import SesameSeed from './SesameSeed.jsx'
 import { useFx } from '../hooks/useFx.jsx'
 
 const SESSION_KEY = 'somless-logo-played'
@@ -17,7 +19,6 @@ function shouldPlay() {
 
 export default function SeedLogo() {
   const { reduced } = useFx()
-  // נקבע פעם אחת בהרכבה; עם prefers-reduced-motion — סטטי לגמרי
   const [play] = useState(() => (reduced ? false : shouldPlay()))
   const id = useId().replace(/:/g, '')
 
@@ -45,7 +46,6 @@ export default function SeedLogo() {
               <rect x="6" y="0" width="6" height="18" />
             </clipPath>
           </defs>
-
           <g className="logo__half logo__half--start" clipPath={`url(#cl${id})`}>
             <path d={SEED_PATH} fill={`url(#lg${id})`} />
             <path d={SEED_SEAM} fill="none" stroke="#8A5A18" strokeWidth="0.7" strokeLinecap="round" />
@@ -57,7 +57,16 @@ export default function SeedLogo() {
         </svg>
       ) : null}
 
-      <h1 className="search-hero__title logo__title">סומלס</h1>
+      <h1 className="search-hero__title logo__title">
+        <span>סו</span>
+        <span className="logo__mem">
+          מ
+          <span className="logo__mem-seed" aria-hidden="true">
+            <SesameSeed variant="toasted" size={13} rotate={-10} />
+          </span>
+        </span>
+        <span>לס</span>
+      </h1>
     </div>
   )
 }

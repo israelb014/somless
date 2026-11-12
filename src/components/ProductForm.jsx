@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import StatusRing from './StatusRing.jsx'
 import { BackIcon, BarcodeIcon } from './Icons.jsx'
+import SeedFrame from './SeedFrame.jsx'
 import { STATUSES, STATUS_ORDER } from '../config.js'
 
 export default function ProductForm({ initial, onSave, onCancel }) {
@@ -66,7 +67,9 @@ export default function ProductForm({ initial, onSave, onCancel }) {
       <form className="form" onSubmit={handleSubmit}>
         <label className="field">
           <span className="field__label">שם המוצר</span>
-          <input
+          <span className="field__wrap">
+            <SeedFrame radius={14} spacing={8.5} size={7} />
+            <input
             ref={nameRef}
             className="field__input"
             value={name}
@@ -74,20 +77,24 @@ export default function ProductForm({ initial, onSave, onCancel }) {
             placeholder="לדוגמה: בייגלה ירושלמי"
             enterKeyHint="next"
             maxLength={120}
-          />
+            />
+          </span>
         </label>
 
         <label className="field">
           <span className="field__label">
             מותג <span className="field__optional">(אופציונלי)</span>
           </span>
-          <input
+          <span className="field__wrap">
+            <SeedFrame radius={14} spacing={8.5} size={7} />
+            <input
             className="field__input"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
             placeholder="לדוגמה: אחלה"
             maxLength={80}
-          />
+            />
+          </span>
         </label>
 
         <fieldset className="field field--status">
@@ -118,14 +125,17 @@ export default function ProductForm({ initial, onSave, onCancel }) {
           <span className="field__label">
             הערה <span className="field__optional">(אופציונלי)</span>
           </span>
-          <textarea
+          <span className="field__wrap">
+            <SeedFrame radius={14} spacing={8.5} size={7} />
+            <textarea
             className="field__input field__input--area"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="מה בדיוק נבדק? מה כתוב בתווית?"
             rows={3}
             maxLength={500}
-          />
+            />
+          </span>
         </label>
 
         {error ? <p className="form__error">{error}</p> : null}

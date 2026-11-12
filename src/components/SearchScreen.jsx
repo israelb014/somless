@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ProductCard from './ProductCard.jsx'
 import StatusRing from './StatusRing.jsx'
 import { CloseIcon, PlusIcon, SearchIcon } from './Icons.jsx'
-import { EmptySeedArt } from './SeedArt.jsx'
+import TahiniBowl from './TahiniBowl.jsx'
 import SeedLogo from './SeedLogo.jsx'
+import SeedFrame from './SeedFrame.jsx'
 import HeroSeeds from './HeroSeeds.jsx'
 import { useFx } from '../hooks/useFx.jsx'
 import { searchProducts } from '../lib/search.js'
@@ -43,6 +44,7 @@ export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
         <p className="search-hero__subtitle">יש בזה שומשום?</p>
 
         <div className="search-box" ref={boxRef}>
+          <SeedFrame radius={30} spacing={6.4} size={6.6} />
           <SearchIcon size={22} className="search-box__icon" />
           <input
             ref={inputRef}
@@ -76,7 +78,7 @@ export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
       <div className="results">
         {!trimmed ? (
           <div className="empty-state fade-in">
-            <EmptySeedArt width={210} />
+            <TahiniBowl width={196} />
             <p className="empty-state__text">
               הקלידו שם מוצר כדי לבדוק אם הוא מכיל שומשום.
             </p>
@@ -99,16 +101,30 @@ export default function SearchScreen({ products, onAdd, onEdit, onDelete }) {
           </div>
         ) : null}
 
-        {results.map((p, i) => (
+        {results.length ? (
           <ProductCard
-            key={p.id}
-            product={p}
-            index={i}
-            variant={i === 0 ? 'hero' : 'compact'}
+            product={results[0]}
+            index={0}
+            variant="hero"
             onEdit={onEdit}
             onDelete={onDelete}
           />
-        ))}
+        ) : null}
+
+        {results.length > 1 ? (
+          <div className="result-grid">
+            {results.slice(1).map((p, i) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={i + 1}
+                variant="tile"
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {/* דיסקליימר קבוע בתחתית מסך התוצאות — דרישה קשיחה */}

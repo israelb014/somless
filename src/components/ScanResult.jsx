@@ -2,7 +2,9 @@
 // שאר המצבים מוצגים כפאנל רגיל. הדיסקליימר נשאר בכל המצבים.
 import { useEffect } from 'react'
 import StatusRing from './StatusRing.jsx'
+import AlertBurst from './AlertBurst.jsx'
 import { CloseIcon, PlusIcon, RefreshIcon } from './Icons.jsx'
+import { useFx } from '../hooks/useFx.jsx'
 import { fireAlert } from '../lib/alertFx.js'
 import { STATUSES, DISCLAIMER } from '../config.js'
 
@@ -22,6 +24,7 @@ export default function ScanResult({
   onLinkBarcode,
 }) {
   const { kind, barcode } = result
+  const { reduced } = useFx()
 
   // מה הסטטוס שמניע את ההתראה
   const status =
@@ -48,8 +51,9 @@ export default function ScanResult({
         aria-label={meta.label}
       >
         <div className="scan-alert__inner">
-          <StatusRing status={status} size={128} />
-          <p className="scan-alert__status">{meta.label}</p>
+          <AlertBurst color={meta.color} animate={!reduced} size={272} />
+
+          <p className="scan-alert__status">{meta.label}!</p>
           <h2 className="scan-alert__name">{name}</h2>
           {brand ? <p className="scan-alert__brand">{brand}</p> : null}
 
@@ -62,28 +66,28 @@ export default function ScanResult({
 
           <p className="scan-alert__disclaimer">{DISCLAIMER}</p>
 
-          <div className="scan-alert__actions">
-            <button type="button" className="btn btn--primary btn--block" onClick={onRescan}>
-              <RefreshIcon size={20} />
+          <button type="button" className="seed-button" onClick={onClose}>
+            <span className="seed-button__texture" aria-hidden="true" />
+            <span className="seed-button__label">הבנתי</span>
+          </button>
+
+          <div className="scan-alert__links">
+            <button type="button" className="scan-alert__link" onClick={onRescan}>
+              <RefreshIcon size={18} />
               סריקה נוספת
             </button>
-            <button type="button" className="btn btn--ghost btn--block" onClick={onClose}>
-              <CloseIcon size={20} />
-              סגירה
-            </button>
+            {kind === 'off' ? (
+              <button
+                type="button"
+                className="scan-alert__link"
+                onClick={() =>
+                  onAddProduct({ name, brand, status, barcode, note: result.off.evidence })
+                }
+              >
+                שמירה במאגר שלי
+              </button>
+            ) : null}
           </div>
-
-          {kind === 'off' ? (
-            <button
-              type="button"
-              className="scan-alert__save"
-              onClick={() =>
-                onAddProduct({ name, brand, status, barcode, note: result.off.evidence })
-              }
-            >
-              שמירה במאגר שלי
-            </button>
-          ) : null}
         </div>
       </div>
     )

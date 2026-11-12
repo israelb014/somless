@@ -1,7 +1,8 @@
 // מסך רשימה מלאה: טאבים לפי סטטוס, ממוינים לפי עדכון אחרון, עם ספירה.
 import { useMemo, useState } from 'react'
 import ProductCard from './ProductCard.jsx'
-import { EmptySeedArt } from './SeedArt.jsx'
+import TahiniBowl from './TahiniBowl.jsx'
+import SeedDivider from './SeedDivider.jsx'
 import { useCountUp } from '../hooks/useCountUp.js'
 import { useFx } from '../hooks/useFx.jsx'
 import { STATUSES, STATUS_ORDER } from '../config.js'
@@ -52,7 +53,7 @@ export default function ListScreen({ products, counts, onEdit, onDelete }) {
       <div className="results">
         {items.length === 0 ? (
           <div className="empty-state fade-in">
-            <EmptySeedArt width={200} />
+            <TahiniBowl width={186} />
             <p className="empty-state__text">
               {tab === 'safe'
                 ? 'הרשימה הלבנה מתחילה ריקה — הוסיפו מוצרים שבדקתם בעצמכם מול התווית.'
@@ -61,7 +62,10 @@ export default function ListScreen({ products, counts, onEdit, onDelete }) {
           </div>
         ) : (
           items.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} onEdit={onEdit} onDelete={onDelete} />
+            <div key={p.id} className="list-row">
+              <ProductCard product={p} index={i} variant="row" onEdit={onEdit} onDelete={onDelete} />
+              {i < items.length - 1 ? <SeedDivider /> : null}
+            </div>
           ))
         )}
       </div>

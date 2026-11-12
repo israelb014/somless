@@ -2,11 +2,12 @@
 // המאגר המרכזי מתעדכן דרך Claude Code — ראו את ההסבר בתחתית המסך.
 import { useState } from 'react'
 import ProductCard from './ProductCard.jsx'
-import { CheckIcon, CopyIcon, ShareIcon } from './Icons.jsx'
-import { EmptySeedArt } from './SeedArt.jsx'
+import { CheckIcon, CopyIcon, PlusIcon, ShareIcon } from './Icons.jsx'
+import SeedSwitch from './SeedSwitch.jsx'
+import TahiniBowl from './TahiniBowl.jsx'
 import { exportLocalProducts } from '../lib/products.js'
 
-export default function MyAdditionsScreen({ local, dbMeta, scanSound, onEdit, onDelete }) {
+export default function MyAdditionsScreen({ local, dbMeta, scanSound, onAdd, onEdit, onDelete }) {
   const [status, setStatus] = useState('') // '' | 'shared' | 'copied' | 'failed'
   const [payload, setPayload] = useState('')
 
@@ -44,9 +45,14 @@ export default function MyAdditionsScreen({ local, dbMeta, scanSound, onEdit, on
         <h1 className="screen__title">ההוספות שלי</h1>
       </header>
 
+      <button type="button" className="btn btn--primary btn--block" onClick={() => onAdd('')}>
+        <PlusIcon size={20} />
+        הוספת מוצר
+      </button>
+
       {items.length === 0 ? (
         <div className="empty-state fade-in">
-          <EmptySeedArt width={200} />
+          <TahiniBowl width={186} />
           <p className="empty-state__title">עדיין לא הוספתם כלום מהמכשיר הזה</p>
           <p className="empty-state__text">
             מוצר שתוסיפו יישמר כאן על הטלפון בלבד, ויופיע בתוצאות עם התג "מקומי".
@@ -87,7 +93,7 @@ export default function MyAdditionsScreen({ local, dbMeta, scanSound, onEdit, on
 
           <div className="results">
             {items.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} onEdit={onEdit} onDelete={onDelete} />
+              <ProductCard key={p.id} product={p} index={i} variant="row" onEdit={onEdit} onDelete={onDelete} />
             ))}
           </div>
         </>
@@ -96,20 +102,13 @@ export default function MyAdditionsScreen({ local, dbMeta, scanSound, onEdit, on
       {scanSound ? (
         <div className="settings-card card">
           <h2 className="settings-card__title">הגדרות</h2>
-          <label className="settings-row">
-            <span>
-              צליל ורטט בסריקה
-              <span className="settings-row__hint">
-                התראה קולית ורטט כשנסרק מוצר שמכיל או עלול להכיל שומשום
-              </span>
-            </span>
-            <input
-              type="checkbox"
-              className="settings-switch"
-              checked={scanSound.enabled}
-              onChange={(e) => scanSound.setEnabled(e.target.checked)}
-            />
-          </label>
+          <SeedSwitch
+            id="scan-sound"
+            checked={scanSound.enabled}
+            onChange={scanSound.setEnabled}
+            label="צליל ורטט בסריקה"
+            hint="התראה קולית ורטט כשנסרק מוצר שמכיל או עלול להכיל שומשום"
+          />
         </div>
       ) : null}
 

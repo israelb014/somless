@@ -3,7 +3,7 @@
    תיפתח מיידית ותעבוד בסופר גם ללא קליטה. אין שרת ואין נתוני משתמש כאן —
    ההוספות המקומיות חיות ב-IndexedDB. */
 
-const VERSION = 'somless-v6'
+const VERSION = 'somless-v8'
 const SHELL_CACHE = `${VERSION}-shell`
 const ASSET_CACHE = `${VERSION}-assets`
 
@@ -17,6 +17,7 @@ const SHELL_URLS = [
   INDEX,
   url('manifest.webmanifest'),
   url('data/products.json'),
+  url('tahini-bowl.png'),
   url('icons/favicon.svg'),
   url('icons/icon-192.png'),
   url('icons/icon-512.png'),
@@ -25,12 +26,35 @@ const SHELL_URLS = [
   url('icons/icon-180.png'),
 ]
 
+/**
+ * נכסי הבנייה נושאים hash בשם, ובטעינה הראשונה הם נטענים לפני שה-worker
+ * שולט בעמוד — ולכן לא נכנסים לקאש מעצמם. כאן קוראים את index.html
+ * ולומדים מתוכו את שמות ה-JS וה-CSS, כדי שהאפליקציה תעלה גם בלי רשת.
+ */
+async function precacheBuildAssets(cache) {
+  try {
+    const res = await fetch(INDEX, { cache: 'reload' })
+    if (!res.ok) return
+    const html = await res.clone().text()
+    await cache.put(INDEX, res)
+    const urls = [...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)].map((m) => m[1])
+    await Promise.all(
+      urls.map((u) => cache.add(new URL(u, self.registration.scope).href).catch(() => {}))
+    )
+  } catch {
+    // אין רשת בזמן ההתקנה — ה-worker יתפוס את הנכסים בטעינה הבאה
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(SHELL_CACHE)
       // addAll נכשל אם קובץ אחד נופל — לכן כל קובץ נשמר בנפרד
-      .then((cache) => Promise.all(SHELL_URLS.map((u) => cache.add(u).catch(() => {}))))
+      .then(async (cache) => {
+        await Promise.all(SHELL_URLS.map((u) => cache.add(u).catch(() => {})))
+        await precacheBuildAssets(cache)
+      })
       .then(() => self.skipWaiting())
   )
 })

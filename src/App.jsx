@@ -180,12 +180,13 @@ function AppBody({
           local={local}
           dbMeta={dbMeta}
           scanSound={scanSound}
+          onAdd={openAdd}
           onEdit={setEditing}
           onDelete={setPendingDelete}
         />
       ) : null}
 
-      <BottomNav view={view} onNavigate={setView} onAdd={openAdd} localCount={local.length} />
+      <BottomNav view={view} onNavigate={setView} localCount={local.length} />
 
       {pendingDelete ? (
         <ConfirmDialog
